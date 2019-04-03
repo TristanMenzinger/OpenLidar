@@ -1,0 +1,126 @@
+<html>
+<head>
+	<title>My first three.js app</title>
+	<script src="main.js"></script>
+	<script src="js/three.js"></script>
+	<script src="js/OrbitControls.js"></script>
+	<script src="js/pako.js"></script>
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnAMjHEBHvaLLvHJxtwyTxvEKrmqf3S88&libraries=places&callback=initAutocomplete" async defer></script>
+	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+
+</head>
+
+<style>
+	body {
+		margin: 0;
+		font-family: 'Roboto';
+		overflow: hidden;
+	}
+
+	canvas {
+		width: 100vw;
+		height: 100vh;
+		display: block;
+		position: fixed;
+		top: 0;
+		left: 0;
+	}
+
+	#search_div {
+		position: absolute;
+		left: 50px;
+		top: 50px;
+		border: 2px solid white;
+		font-size: 20px;
+		color: white;
+		padding: 8px 8px;
+	}
+
+	#autocomplete_input {
+		font-size: 15px;
+		padding: 0 11px 0 13px;
+		text-overflow: ellipsis;
+		width: 150px;
+		height: 40px;
+		position: absolute;
+		left: 88px;
+		top: 50px;
+		z-index: 10000 !important;
+		background-color: transparent;
+		color: white;
+		border: 2px solid white;
+
+		-ms-transition: background-color 400ms linear;
+		transition: background-color 400ms linear;
+		-ms-transition: width 200ms linear;
+		transition: width 200ms linear;
+	}
+
+	#autocomplete_input:hover {
+		width: 400px;
+		background-color: black;
+		-ms-transition: width 200ms linear;
+		transition: width 200ms linear;
+	}
+
+	#autocomplete_input:focus {
+		width: 400px;
+		background-color: black;
+		-ms-transition: width 200ms linear;
+		transition: width 200ms linear;
+	}
+
+	/*  All the stupid Google Autocomplete Styling  */
+
+	.pac-container, .pac-item {
+		background-color: black;
+		color: white;
+		border: none;
+		border-left: 0.3em solid #ffffff00;
+	}
+
+	.pac-item {
+		cursor: pointer;
+	}
+
+	.pac-item:hover {
+		background-color: black;
+		border: none;
+		border-left: 0.3em solid white;
+	}
+
+	.pac-item-selected,
+	.pac-item-selected:hover {
+		border: none;
+		background-color: black;
+	}
+
+	.pac-item-query {
+		color: white;
+	}
+
+	.pac-container:after {
+		white-space: pre;
+		content: "Powered by                   ";
+		font-size: 10px;
+		line-height: 17px;
+		color: gray !important;
+	}
+
+	.pac-icon, .pac-icon-selected {
+		color: white;
+	}
+
+	.pac-icon:hover {
+		color: black;;
+	}
+
+</style>
+
+<body onload="start()">
+	<canvas></canvas>
+	<input id="autocomplete_input"></input>
+	<div id="search_div"><i class="fas fa-search"></i></div>
+</body>
+</html>
