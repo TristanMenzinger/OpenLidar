@@ -13,36 +13,106 @@ let global_offset_z = null;
 
 let already_rendered = [];
 
+
+function ll2WGS(lat, lng){
+	wgs_coords = proj4("+proj=utm +zone=32N, +ellps=WGS84 +datum=WGS84 +units=m +no_defs").forward([lng, lat]) //careful with lat lng order (!) they flipped it 
+	return wgs_coords;
+}
+
+function WGS2ll(wgs_x, wgs_y){
+	latlng_coords = proj4("+proj=utm +zone=32N, +ellps=WGS84 +datum=WGS84 +units=m +no_defs").convert([wgs_x, wgs_y]) //careful with order, here its x and then y
+	return latlng_coords
+}
+
+function showWrongCountyNote() {
+	document.getElementById("invalid_location").classList.remove("hide_by_height");
+}
+
+function hideWrongCountyNote() {
+	document.getElementById("invalid_location").classList.add("hide_by_height");
+}
+
 function initAutocomplete() {
 
-	var input = document.getElementById('autocomplete_input');
-	var autocomplete = new google.maps.places.Autocomplete(input);
+	let input = document.getElementById('autocomplete_input');
+	let autocomplete = new google.maps.places.Autocomplete(input);
 	autocomplete.setFields(['address_components', 'geometry','name']);
 	autocomplete.setTypes(['geocode'])
 
-	var infowindow = new google.maps.InfoWindow();
-	var infowindowContent = document.getElementById('infowindow-content');
+	let infowindow = new google.maps.InfoWindow();
+	let infowindowContent = document.getElementById('infowindow-content');
 	infowindow.setContent(infowindowContent);
-	var place = autocomplete.getPlace();
+	let place = autocomplete.getPlace();
+
 	autocomplete.addListener('place_changed', function() {
-		 var place = autocomplete.getPlace();
-		 console.log(place)
+		let place = autocomplete.getPlace();
+		console.log(place);
+
+		let is_in_nrw = place.address_components.filter(comp => {
+			return comp.short_name === "NRW";
+		}).length !== 0;
+
+		if(!is_in_nrw) {
+			showWrongCountyNote();
+		}else {
+			hideWrongCountyNote();
+
+			wgs_coords = ll2WGS(place.geometry.location.lat(), place.geometry.location.lng());
+			zoomToNewPlace(wgs_coords)
+		}
 	});
-
-	//place.geometry.location.lng()
-
-	// if (!place.geometry) {
-	//   // User entered the name of a Place that was not suggested and
-	//   // pressed the Enter key, or the Place Details request failed.
-	//   window.alert("No details available for input: '" + place.name + "'");
-	//   return;
 }
 
-async function start2() {
+function euclidianDistance(wgs_coords_a, wgs_coords_b) {
+	var a = wgs_coords_a[0] - wgs_coords_b[0];
+	var b = wgs_coords_a[1] - wgs_coords_b[1];
+	return Math.sqrt( a*a + b*b );
+}
+
+function moveCamera(x, y) {
+	camera.position.set(x, camera.position.y, y);
+	controls.target.set(x, controls.target.y, y);
+	controls.update();
+}
+
+function cameraToNormalPos() {
 
 }
 
-function transferControlsListener() {
+
+/*
+
+FOR SOME ABSURD REASON ITS ALL FUCKING FLIPPED?! 
+HOW CAN THIS BE?!?!
+*/
+
+function zoomToNewPlace(wgs_coords) {	
+	wgs_x = roundDown50(wgs_coords[0]);
+	wgs_y = roundDown50(wgs_coords[1]);
+
+	let distance = euclidianDistance(wgs_coords, [global_offset_x, global_offset_y])
+	console.log("distance to new spot is:", distance)
+
+	if(distance > 400) {
+		//clean all before loaded ones from scene at least
+		if(global_offset_x != null) {
+			moveCamera(wgs_x-global_offset_x, wgs_y-global_offset_y)
+		}else {
+			moveCamera(25, 25)	
+		}
+	}else {
+		moveCamera(25, 25)
+	}
+	getpoints(wgs_x, wgs_y)
+
+	
+
+
+	console.log(wgs_coords);
+}
+
+
+function initTransferControlsListener() {
 	autocomplete_input = document.getElementById("autocomplete_input");
 	autocomplete_input.addEventListener("mouseover", function() {
 		controls.enabled = false;
@@ -54,7 +124,7 @@ function transferControlsListener() {
 	});
 
 	autocomplete_input.addEventListener('keypress', function (e) {
-		var key = e.which || e.keyCode;
+		let key = e.which || e.keyCode;
 		if (key === 13) { // 13 is enter
 			controls.enabled = true;
 			autocomplete_input.blur();
@@ -69,7 +139,7 @@ function transferControlsListener() {
 }
 
 async function start() {
-	transferControlsListener();
+	initTransferControlsListener();
 
 	scene = new THREE.Scene();
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -153,16 +223,12 @@ async function start() {
 
 	animate();
 
-	getpoints();
+	//init_x = 305000;
+	//init_y = 5644000;
+	//getpoints(init_x, init_y);
 }
 
-async function getpoints() {
-	// init_x = 304000;
-	// init_y = 5645200;
-	// init_x = 302000;
-	// init_y = 5647000;
-	init_x = 305000;
-	init_y = 5644000;
+async function getpoints(init_x, init_y) {
 	to = 4;
 	for(let x = 0; x < to; x++) {
 		for(let y = 0; y < to; y++) {

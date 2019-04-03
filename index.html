@@ -1,10 +1,14 @@
 <html>
 <head>
+	<meta charset="UTF-8">
+	
 	<title>My first three.js app</title>
+	
 	<script src="main.js"></script>
 	<script src="js/three.js"></script>
 	<script src="js/OrbitControls.js"></script>
 	<script src="js/pako.js"></script>
+	<script src="js/proj4.js"></script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnAMjHEBHvaLLvHJxtwyTxvEKrmqf3S88&libraries=places&callback=initAutocomplete" async defer></script>
 	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
@@ -71,6 +75,33 @@
 		transition: width 200ms linear;
 	}
 
+	#autocomplete_input:not(:hover):not(:focus) ~ #invalid_location{
+		width: 138px;
+	}
+
+	#invalid_location {
+		overflow:hidden;
+		position: absolute;
+		left: 90px;
+		top: 90px;
+		z-index: 100;
+		width: 388px;
+		background-color: red;
+		color: white;
+		padding-left: 10px;
+		height: 20px;
+		line-height: 20px;
+		font-size: 12px;
+		font-weight: bold;
+		display: block;
+		-ms-transition: all 200ms linear;
+		transition: all 200ms linear;
+	}
+
+	#invalid_location.hide_by_height {
+		height: 0px;
+	}
+
 	/*  All the stupid Google Autocomplete Styling  */
 
 	.pac-container, .pac-item {
@@ -122,5 +153,6 @@
 	<canvas></canvas>
 	<input id="autocomplete_input"></input>
 	<div id="search_div"><i class="fas fa-search"></i></div>
+	<div id="invalid_location" class="hide_by_height">Nicht in NRW</div>
 </body>
 </html>
