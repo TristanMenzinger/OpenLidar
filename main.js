@@ -70,8 +70,8 @@ function euclidianDistance(wgs_coords_a, wgs_coords_b) {
 }
 
 function moveCamera(x, y) {
-	camera.position.set(x, camera.position.y, y);
-	controls.target.set(x, controls.target.y, y);
+	camera.position.set(x, y, camera.position.z);
+	controls.target.set(x, y, controls.target.z);
 	controls.update();
 }
 
@@ -143,6 +143,7 @@ async function start() {
 
 	scene = new THREE.Scene();
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+	camera.up.set( 0, 0, 1 );
 
 	let canvas = document.querySelector("canvas");
 	renderer = new THREE.WebGLRenderer({canvas: canvas});
@@ -194,7 +195,7 @@ async function start() {
 		//console.log(.target)
 
 		x_focus_center = roundDown50(controls.target.x)
-		y_focus_center = roundDown50(controls.target.z)
+		y_focus_center = roundDown50(controls.target.y)
 
 		delta = [-150, -100, -50, 0, 50, 100, 150]
 
@@ -223,9 +224,9 @@ async function start() {
 
 	animate();
 
-	//init_x = 305000;
-	//init_y = 5644000;
-	//getpoints(init_x, init_y);
+	// init_x = 305000;
+	// init_y = 5644000;
+	// getpoints(init_x, init_y);
 }
 
 async function getpoints(init_x, init_y) {
@@ -303,10 +304,12 @@ function addPointsToScene(scene, colors, points, offset_x, offset_y, offset_z) {
 
 	//TODO:	Do this with the Javascript Numpy equivalent 
 	for (let i in points) {
+		
 		pt = points[i];
+
 		x = Number(pt[0]) - global_offset_x;
-		y = Number(pt[2]) - global_offset_z;
-		z = Number(pt[1]) - global_offset_y;
+		y = Number(pt[1]) - global_offset_y;
+		z = Number(pt[2]) - global_offset_z;
 
 		//TODO:	CHECK - WHY IS THIS NECCESSARY?
 		if(!isNaN(x) && !isNaN(y) && !isNaN(z)) {
@@ -336,6 +339,7 @@ function addPointsToScene(scene, colors, points, offset_x, offset_y, offset_z) {
 	let material = new THREE.PointsMaterial({ size: 0.85, vertexColors: THREE.VertexColors });
 	points = new THREE.Points(geometry, material);
 	scene.add(points);
+	console.log("added points", n_positions[n_positions.length - 1])
 
 	// let bound_center_x = offset_x - global_offset_x + 25;
 	// let bound_center_y = offset_y - global_offset_y + 25;
