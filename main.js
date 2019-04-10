@@ -11,8 +11,16 @@ let global_offset_z = null;
 
 // let zlib = require('browserify-zlib');
 
-let already_rendered = [];
+let already_loaded = [];
+let all_tiles = [];
 
+//
+let GEOMETRY_LOADING_HINT;
+let MATERIAL_LOADING_HINT;
+
+let CONCURRENT_HTTP_REQUEST_COUNT = 0;
+
+let LOAD_AROUND_NR = 2;
 
 function ll2WGS(lat, lng){
 	wgs_coords = proj4("+proj=utm +zone=32N, +ellps=WGS84 +datum=WGS84 +units=m +no_defs").forward([lng, lat]) //careful with lat lng order (!) they flipped it 
@@ -56,7 +64,6 @@ function initAutocomplete() {
 			showWrongCountyNote();
 		}else {
 			hideWrongCountyNote();
-
 			wgs_coords = ll2WGS(place.geometry.location.lat(), place.geometry.location.lng());
 			zoomToNewPlace(wgs_coords)
 		}
@@ -70,21 +77,14 @@ function euclidianDistance(wgs_coords_a, wgs_coords_b) {
 }
 
 function moveCamera(x, y) {
-	camera.position.set(x, y, camera.position.z);
-	controls.target.set(x, y, controls.target.z);
+	camera.position.set(x, y, 50); //camera.position.z
+	controls.target.set(x, y, 0); //controls.target.z
 	controls.update();
 }
 
 function cameraToNormalPos() {
 
 }
-
-
-/*
-
-FOR SOME ABSURD REASON ITS ALL FUCKING FLIPPED?! 
-HOW CAN THIS BE?!?!
-*/
 
 function zoomToNewPlace(wgs_coords) {	
 	wgs_x = roundDown50(wgs_coords[0]);
@@ -103,14 +103,12 @@ function zoomToNewPlace(wgs_coords) {
 	}else {
 		moveCamera(25, 25)
 	}
-	getpoints(wgs_x, wgs_y)
+	LOAD_AROUND_NR = 3;
 
+	loadTilesAtIfMissing(wgs_x, wgs_y, LOAD_AROUND_NR);
 	
-
-
 	console.log(wgs_coords);
 }
-
 
 function initTransferControlsListener() {
 	autocomplete_input = document.getElementById("autocomplete_input");
@@ -139,6 +137,10 @@ function initTransferControlsListener() {
 }
 
 async function start() {
+
+	GEOMETRY_LOADING_HINT = new THREE.PlaneGeometry(50, 50, 50);
+	MATERIAL_LOADING_HINT = new THREE.MeshBasicMaterial( {color: 0x9ACD32, transparent: true, opacity: 0.3, side: THREE.DoubleSide} );
+
 	initTransferControlsListener();
 
 	scene = new THREE.Scene();
@@ -165,11 +167,11 @@ async function start() {
 	// to = 2;
 	// for(let x = 0; x < to; x++) {
 	// 	for(let y = 0; y < to; y++) {
-	// 		xx = init_x + 50 * x;
-	// 		yy = init_y + 50 * y;
-	// 		xyz = await loadPoints(xx, yy);
-	// 		colors = await loadColor(xx, yy);
-	// 		addPointsToScene(scene, colors, xyz, xx, yy, 100)
+	// 		x50 = init_x + 50 * x;
+	// 		y50 = init_y + 50 * y;
+	// 		xyz = await loadPoints(x50, y50);
+	// 		colors = await loadColor(x50, y50);
+	// 		addPointsToScene(scene, colors, xyz, x50, y50, 100)
 	// 	}
 	// }
 
@@ -181,70 +183,240 @@ async function start() {
 	scene.add(axesHelper);
 	console.log(axesHelper)
 
-	console.log("vertices done")
-
 	camera.position.z = 5;
 
-	let animate = function () {
-		requestAnimationFrame(animate);
+	redraw();
 
-		// cube.rotation.x += 0.01;
-		// cube.rotation.y += 0.01;
+	// init_x = roundDown50(301917.9717594234);
+	// init_y = roundDown50(5643190.490984015);
+	// let newTile = new TileObject(init_x, init_y);
+
+	// newTile.downloadAndShow();
+}
+
+function redraw() {
+
+	requestAnimationFrame(redraw);
+
+	if(global_offset_x != null) {
 
 		renderer.render(scene, camera);
-		//console.log(.target)
 
-		x_focus_center = roundDown50(controls.target.x)
-		y_focus_center = roundDown50(controls.target.y)
+		x_focus_center = roundDown50(controls.target.x);
+		y_focus_center = roundDown50(controls.target.y);
 
-		delta = [-150, -100, -50, 0, 50, 100, 150]
+		//this is slighty inefficient but the easiest way (no request leads to requests which leads to resets, which then leads to more requests... etc)
+		if(CONCURRENT_HTTP_REQUEST_COUNT === 0 && LOAD_AROUND_NR < 5) {
+			//increase area around
+			LOAD_AROUND_NR =  LOAD_AROUND_NR + 1;
+		}else {
+			//We're busy loading stuff, no need to start more requests
+			LOAD_AROUND_NR = 2;
+		}
+		loadTilesAtIfMissing(x_focus_center, y_focus_center, LOAD_AROUND_NR);
+	}
+};
 
-		for(let i in delta) {
-			for(let j in delta) {
+function loadTilesAtIfMissing(x_focus_center, y_focus_center, load_around_nr) {
 
-				x_focus = x_focus_center + delta[i]
-				y_focus = y_focus_center + delta[j]
+	if(load_around_nr === undefined || load_around_nr === null) {
+		load_around_nr = 3;
+	}
 
-				let found = already_rendered.find(chunk => {
-					return (chunk.x) === (x_focus + global_offset_x) && (chunk.y) === (y_focus + global_offset_y)
-				})
-				if(found == undefined) {
-					xx = x_focus + global_offset_x;
-					yy = y_focus + global_offset_y;
-					let obj = {};
-					obj.x = xx;
-					obj.y = yy;
-					already_rendered.push(obj)
-					console.log("added new:", x_focus, y_focus)
-					getTile(xx, yy);
-				}
+	delta = [0]
+	for(let i = load_around_nr; i > 0; i--) {
+		delta.push(-50*i)
+	}
+	for(let i = 1; i <= load_around_nr; i++) {
+		delta.push(50*i)
+	}
+
+	for(let i in delta) {
+		for(let j in delta) {
+
+			x_focus = x_focus_center + delta[i]
+			y_focus = y_focus_center + delta[j]
+
+			let found = all_tiles.find(chunk => {
+				return (chunk.x50) === (x_focus + global_offset_x) && (chunk.y50) === (y_focus + global_offset_y)
+			})
+
+			if(found === undefined) {
+				//No yet defined -> download then show it
+				let newTile = new TileObject(x_focus + global_offset_x, y_focus + global_offset_y);
+				newTile.downloadAndShow();
+				newTile.download_started = true;
+			} else if(!found.isShowing() && found.isDownloadStarted() && found.isDownloadFinished()) {
+				//Is fully downloaded and not showing -> show it
+				found.show();
 			}
 		}
-	};
+	}
+}
 
-	animate();
 
-	// init_x = 305000;
-	// init_y = 5644000;
-	// getpoints(init_x, init_y);
+function countShowing() {
+	return all_tiles.reduce(
+		function(total, tileObject){
+			return tileObject.isShowing() ? total+1 : total
+		}, 
+		0
+	);
+}
+
+function autohide(viewpoint_x, viewpoint_y) {
+	x_focus_center = roundDown50(controls.target.x)
+	y_focus_center = roundDown50(controls.target.y)
+
+	delta = [-150, -100, -50, 0, 50, 100, 150];
+
+	for(let i in delta) {
+		for(let j in delta) {
+
+			x_focus = x_focus_center + delta[i]
+			y_focus = y_focus_center + delta[j]
+
+			let found = all_tiles.find(chunk => {
+				return (chunk.x50) === (x_focus) && (chunk.y50) === (y_focus)
+			})
+
+			if(found == undefined) {
+				let newTile = new TileObject(x50, y50);
+				newTile.download_started = true;
+				newTile.downloadAndShow();
+			}else if(!found.isShowing()) {
+				console.log("isn't showing right now")
+				found.show();
+			}
+		}
+	}
+}
+
+class TileObject {
+	constructor(x50, y50) {
+		this.x50 = x50;
+		this.y50 = y50;
+
+		this.showing = false;
+		this.download_started = false;
+		this.download_finished = false;
+		this.showing_loading_hint = false;
+		
+		all_tiles.push(this);
+		return this;
+	}
+
+	downloadStarted() {
+		this.download_started = true;
+		CONCURRENT_HTTP_REQUEST_COUNT++;
+	}
+
+	downloadEnded() {
+		this.download_finished = true;
+		CONCURRENT_HTTP_REQUEST_COUNT--;
+	}
+
+	isShowing() {
+		return this.showing;
+	}
+
+	isDownloadStarted() {
+		return this.download_started;
+	}
+
+	isDownloadFinished() {
+		return this.download_finished;
+	}
+
+	removeRawData() {
+		delete this.xyz;
+		delete this.colors;
+	}
+
+	async downloadData() {		
+		this.downloadStarted();
+
+		// while(CONCURRENT_HTTP_REQUEST_COUNT > 16) {
+		// 	console.log("Concurrency limit reached, waiting");
+		// 	sleep(30);
+		// }
+
+		let data = await getTileData(this.x50, this.y50);
+		this.xyz = data[0];
+		this.colors = data[1];
+		this.downloadEnded();
+		return this;
+	}
+
+	showLoadingHint() {
+		if(this.showing_loading_hint == false) {
+			let bound_center_x = this.x50 - global_offset_x + 25;
+			let bound_center_y = this.y50 - global_offset_y + 25;
+			let bound_center_z = 0;
+
+			this.showing_loading_hint = true;
+			this.loading_hint_plane = new THREE.Mesh( GEOMETRY_LOADING_HINT, MATERIAL_LOADING_HINT );
+			this.loading_hint_plane.position.set(bound_center_x, bound_center_y, bound_center_z);
+			scene.add(this.loading_hint_plane);
+		}
+	}
+
+	removeLoadingHint() {
+		if(this.showing_loading_hint) {
+			this.showing_loading_hint = false;
+			scene.remove(this.loading_hint_plane);
+		}
+	}
+
+	show() {
+		if(!this.isShowing()) {
+			this.showing = true;
+			if(this.threejs_points === undefined || this.threejs_points === null) {
+				this.threejs_points = createTilePoints(this);
+				this.removeRawData();
+			}
+			scene.add(this.threejs_points);
+		}
+	}
+
+	hide() {
+		if(this.isShowing()) {
+			this.showing = false;
+			scene.remove(this.threejs_points); 
+		}
+	}
+
+	async downloadAndShow() {
+		//Only if not yet started to download or finished shall we download the data again
+		if(!this.isDownloadStarted() && !this.isDownloadFinished()) {
+			this.showLoadingHint()
+			await this.downloadData();
+			this.show();
+			this.removeLoadingHint();
+		}
+	}
+}
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function getpoints(init_x, init_y) {
 	to = 4;
 	for(let x = 0; x < to; x++) {
 		for(let y = 0; y < to; y++) {
-			xx = init_x + 50 * x;
-			yy = init_y + 50 * y;
+			x50 = init_x + 50 * x;
+			y50 = init_y + 50 * y;
 
 			let obj = {};
-			obj.x = xx - global_offset_x;
-			obj.y = yy - global_offset_y;
-			already_rendered.push(obj)
+			obj.x = x50 - global_offset_x;
+			obj.y = y50 - global_offset_y;
 
-			getTile(xx, yy);
-			// xyz = await loadPoints(xx, yy);
-			// colors = await loadColor(xx, yy);
-			// addPointsToScene(scene, colors, xyz, xx, yy, 100)
+			already_loaded.push(obj)
+			getTile(x50, y50, obj);
+			// xyz = await loadPoints(x50, y50);
+			// colors = await loadColor(x50, y50);
+			// addPointsToScene(scene, colors, xyz, x50, y50, 100)
 		}
 	}
 }
@@ -253,10 +425,10 @@ async function getpoints(init_x, init_y) {
 
 //Fetches and adds to the global scene a 50x50 Tile for given x and y coordinates via the loadPoints and loadColor methods
 //Input 	x, y (lower x coordinate, lower y coordinate)
-async function getTile(xx, yy) {
-	let xyz = await loadPoints(xx, yy);
-	let colors = await loadColor(xx, yy);
-	addPointsToScene(scene, colors, xyz, xx, yy, 100)
+async function getTileData(x50, y50) {
+	let xyz = await loadPoints(x50, y50);
+	let colors = await loadColor(x50, y50);
+	return [xyz, colors];
 }
 
 //Load the color data from backblaze via HTTP-Request given x and y as 50m-granularity coordinates
@@ -282,16 +454,27 @@ async function loadColor(x, y) {
 	return colors;
 }
 
-
 //Add a set of points to the scene
 //Input scene, colors, points, offset's in all directions
-function addPointsToScene(scene, colors, points, offset_x, offset_y, offset_z) {
+function createTilePoints(tileObject) {
+
+	//TODO: Fix this workaround with parsing - last row is always "dead" for some reason
+	tileObject.xyz.pop()
 
 	//if undefined, set global offset initially.
 	if(global_offset_x === null) {
-		global_offset_x = offset_x;
-		global_offset_y = offset_y;
-		global_offset_z = offset_z;
+
+		console.log(tileObject)
+
+		global_offset_x = tileObject.x50;
+		global_offset_y = tileObject.y50;
+
+		let z_avg = 0;
+		for (let i in tileObject.xyz) {
+			z_avg = z_avg + Number(tileObject.xyz[i][2]);
+		}
+
+		global_offset_z = z_avg / tileObject.xyz.length;
 	}
 
 	//create a buffer geometry
@@ -302,33 +485,32 @@ function addPointsToScene(scene, colors, points, offset_x, offset_y, offset_z) {
 	let n_colors = [];
 	let color = new THREE.Color();
 
-	//TODO:	Do this with the Javascript Numpy equivalent 
-	for (let i in points) {
-		
-		pt = points[i];
+	let z_average = 0;
 
+	//TODO:	Do this with the Javascript Numpy equivalent 
+	for (let i in tileObject.xyz) {
+
+		const pt = tileObject.xyz[i];
+
+		//deduct the global offsets set on the initial load 
 		x = Number(pt[0]) - global_offset_x;
 		y = Number(pt[1]) - global_offset_y;
 		z = Number(pt[2]) - global_offset_z;
 
-		//TODO:	CHECK - WHY IS THIS NECCESSARY?
-		if(!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+		//push the coords to the array
+		n_positions.push(x, y, z);
+
+		//create one single color (will be changed in the loop)
+		cl = hexToRgb(tileObject.colors[i][0]);
 		
-			//push the coords to the array
-			n_positions.push(x, y, z);
+		//decimal rgb conversion
+		x = cl[0] / 255;
+		y = cl[1] / 255;
+		z = cl[2] / 255;
+		color.setRGB(x, y, z);
 
-			//create one single color (will be changed in the loop)
-			cl = hexToRgb(colors[i][0]);
-			
-			//decimal rgb conversion
-			x = cl[0] / 255;
-			y = cl[1] / 255;
-			z = cl[2] / 255;
-			color.setRGB(x, y, z);
-
-			//push to colors array
-			n_colors.push(color.r, color.g, color.b);
-		}
+		//push to colors array
+		n_colors.push(color.r, color.g, color.b);
 	}
 
 	geometry.addAttribute('position', new THREE.Float32BufferAttribute(n_positions, 3));
@@ -338,19 +520,7 @@ function addPointsToScene(scene, colors, points, offset_x, offset_y, offset_z) {
 
 	let material = new THREE.PointsMaterial({ size: 0.85, vertexColors: THREE.VertexColors });
 	points = new THREE.Points(geometry, material);
-	scene.add(points);
-	console.log("added points", n_positions[n_positions.length - 1])
-
-	// let bound_center_x = offset_x - global_offset_x + 25;
-	// let bound_center_y = offset_y - global_offset_y + 25;
-	// let bound_center_z = offset_z - global_offset_z + 25;
-
-	// console.log(bound_center_x, bound_center_y, bound_center_z)
-	// let newgeo = new THREE.BoxGeometry(50, 50, 50);
-	// let mat = new THREE.MeshBasicMaterial( {color: 0xff4500, wireframe: true} );
-	// cube = new THREE.Mesh( newgeo, mat );
-	// cube.position.set(bound_center_x, bound_center_z, bound_center_y);
-	// scene.add( cube );
+	return points;
 }
 
 //Convert a "5a7aff" HEX to a (255,255,255) RGB Value
@@ -374,7 +544,7 @@ function makeRequest(method, url) {
 		xhr.open(method, url);
 		xhr.responseType = "arraybuffer"; //for ungzip with pako
 		xhr.onload = function () {
-			console.log(xhr)
+			//console.log(xhr)
 			if (this.status >= 200 && this.status < 300) {
 				let arrayBuffer = xhr.response; // Note: not oReq.responseText
 				let byteArray = new Uint8Array(arrayBuffer);
