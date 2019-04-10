@@ -4,17 +4,15 @@ let camera;
 let controls;
 let renderer;
 
-//set on the first load 
-let global_offset_x = null;
-let global_offset_y = null;
-let global_offset_z = null;
+//set on the first load of a tile
+let global_offset_z = 0;
+let first_search_done = null;
 
 // let zlib = require('browserify-zlib');
 
 let already_loaded = [];
 let all_tiles = [];
 
-//
 let GEOMETRY_LOADING_HINT;
 let MATERIAL_LOADING_HINT;
 
@@ -27,8 +25,8 @@ function ll2WGS(lat, lng){
 	return wgs_coords;
 }
 
-function WGS2ll(wgs_x, wgs_y){
-	latlng_coords = proj4("+proj=utm +zone=32N, +ellps=WGS84 +datum=WGS84 +units=m +no_defs").convert([wgs_x, wgs_y]) //careful with order, here its x and then y
+function WGS2ll(x, y){
+	latlng_coords = proj4("+proj=utm +zone=32N, +ellps=WGS84 +datum=WGS84 +units=m +no_defs").convert([x, y]) //careful with order, here its x and then y
 	return latlng_coords
 }
 
@@ -65,7 +63,8 @@ function initAutocomplete() {
 		}else {
 			hideWrongCountyNote();
 			wgs_coords = ll2WGS(place.geometry.location.lat(), place.geometry.location.lng());
-			zoomToNewPlace(wgs_coords)
+			zoomToNewPlace(wgs_coords[0], wgs_coords[1])
+			first_search_done = true;
 		}
 	});
 }
@@ -86,31 +85,23 @@ function cameraToNormalPos() {
 
 }
 
-function zoomToNewPlace(wgs_coords) {	
-	wgs_x = roundDown50(wgs_coords[0]);
-	wgs_y = roundDown50(wgs_coords[1]);
+function zoomToNewPlace(x, y) {
 
-	let distance = euclidianDistance(wgs_coords, [global_offset_x, global_offset_y])
-	console.log("distance to new spot is:", distance)
+	x = roundDown50(x);
+	y = roundDown50(y);
 
+	//get distance from new loc to current viewing point
+	let distance = euclidianDistance([x, y], [controls.target.x, controls.target.y])
+	console.log("eucl. distance to new is:", distance)
 	if(distance > 400) {
 		//clean all before loaded ones from scene at least
-		if(global_offset_x != null) {
-			moveCamera(wgs_x-global_offset_x, wgs_y-global_offset_y)
-		}else {
-			moveCamera(25, 25)	
-		}
-	}else {
-		moveCamera(25, 25)
 	}
-	LOAD_AROUND_NR = 3;
 
-	loadTilesAtIfMissing(wgs_x, wgs_y, LOAD_AROUND_NR);
-	
-	console.log(wgs_coords);
+	moveCamera(x, y)
 }
 
 function initTransferControlsListener() {
+
 	autocomplete_input = document.getElementById("autocomplete_input");
 	autocomplete_input.addEventListener("mouseover", function() {
 		controls.enabled = false;
@@ -198,7 +189,7 @@ function redraw() {
 
 	requestAnimationFrame(redraw);
 
-	if(global_offset_x != null) {
+	if(first_search_done != null) {
 
 		renderer.render(scene, camera);
 
@@ -238,12 +229,12 @@ function loadTilesAtIfMissing(x_focus_center, y_focus_center, load_around_nr) {
 			y_focus = y_focus_center + delta[j]
 
 			let found = all_tiles.find(chunk => {
-				return (chunk.x50) === (x_focus + global_offset_x) && (chunk.y50) === (y_focus + global_offset_y)
+				return (chunk.x50) === (x_focus) && (chunk.y50) === (y_focus)
 			})
 
 			if(found === undefined) {
 				//No yet defined -> download then show it
-				let newTile = new TileObject(x_focus + global_offset_x, y_focus + global_offset_y);
+				let newTile = new TileObject(x_focus, y_focus);
 				newTile.downloadAndShow();
 				newTile.download_started = true;
 			} else if(!found.isShowing() && found.isDownloadStarted() && found.isDownloadFinished()) {
@@ -350,9 +341,9 @@ class TileObject {
 
 	showLoadingHint() {
 		if(this.showing_loading_hint == false) {
-			let bound_center_x = this.x50 - global_offset_x + 25;
-			let bound_center_y = this.y50 - global_offset_y + 25;
-			let bound_center_z = 0;
+			let bound_center_x = this.x50 + 25;
+			let bound_center_y = this.y50 + 25;
+			let bound_center_z = global_offset_z;
 
 			this.showing_loading_hint = true;
 			this.loading_hint_plane = new THREE.Mesh( GEOMETRY_LOADING_HINT, MATERIAL_LOADING_HINT );
@@ -461,22 +452,6 @@ function createTilePoints(tileObject) {
 	//TODO: Fix this workaround with parsing - last row is always "dead" for some reason
 	tileObject.xyz.pop()
 
-	//if undefined, set global offset initially.
-	if(global_offset_x === null) {
-
-		console.log(tileObject)
-
-		global_offset_x = tileObject.x50;
-		global_offset_y = tileObject.y50;
-
-		let z_avg = 0;
-		for (let i in tileObject.xyz) {
-			z_avg = z_avg + Number(tileObject.xyz[i][2]);
-		}
-
-		global_offset_z = z_avg / tileObject.xyz.length;
-	}
-
 	//create a buffer geometry
 	let geometry = new THREE.BufferGeometry();
 
@@ -485,7 +460,13 @@ function createTilePoints(tileObject) {
 	let n_colors = [];
 	let color = new THREE.Color();
 
-	let z_average = 0;
+	if(global_offset_z === 0) {
+		let avg_z = 0;
+		for (let i in tileObject.xyz) {
+			avg_z = avg_z + Number(tileObject.xyz[i][2]);
+		}
+		global_offset_z = avg_z / tileObject.xyz.length;
+	}
 
 	//TODO:	Do this with the Javascript Numpy equivalent 
 	for (let i in tileObject.xyz) {
@@ -493,9 +474,9 @@ function createTilePoints(tileObject) {
 		const pt = tileObject.xyz[i];
 
 		//deduct the global offsets set on the initial load 
-		x = Number(pt[0]) - global_offset_x;
-		y = Number(pt[1]) - global_offset_y;
-		z = Number(pt[2]) - global_offset_z;
+		x = Number(pt[0]);
+		y = Number(pt[1]);
+		z = Number(pt[2]);
 
 		//push the coords to the array
 		n_positions.push(x, y, z);
