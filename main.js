@@ -44,6 +44,7 @@ function initAutocomplete() {
 	let autocomplete = new google.maps.places.Autocomplete(input);
 	autocomplete.setFields(['address_components', 'geometry','name']);
 	autocomplete.setTypes(['geocode'])
+	console.log(autocomplete)
 
 	let infowindow = new google.maps.InfoWindow();
 	let infowindowContent = document.getElementById('infowindow-content');

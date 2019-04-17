@@ -32,74 +32,92 @@
 	}
 
 	#search_div {
-		position: absolute;
-		left: 50px;
-		top: 50px;
-		border: 2px solid white;
-		font-size: 20px;
+
+		/* This stops the border from adding padding*/
+		box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		-webkit-box-sizing: border-box;
+
+		width: 2.25em;
+		height: 2.25em;
+
+		font-size: 1.2em;
+
+		border: 0.1em solid white;
 		color: white;
-		padding: 8px 8px;
+
+		padding: 0.5em 0.5em;
+
+		display: inline-block;
+		vertical-align: top;
 	}
 
 	#autocomplete_input {
-		font-size: 15px;
-		padding: 0 11px 0 13px;
-		text-overflow: ellipsis;
-		width: 150px;
-		height: 40px;
-		position: absolute;
-		left: 88px;
-		top: 50px;
-		z-index: 10000 !important;
-		background-color: transparent;
-		color: white;
-		border: 2px solid white;
+		width: 12.5em;
+		height: 3em;
 
-		-ms-transition: background-color 400ms linear;
-		transition: background-color 400ms linear;
-		-ms-transition: width 200ms linear;
-		transition: width 200ms linear;
+		padding: 0 1em 0 1em;
+		text-overflow: ellipsis;
+
+		background-color: transparent;
+		display: inline-block;
+
+		border: 0.15em solid white;
+		color: white;
+		
+		caret-color: white;
+
+		font-size: 0.9em;
+		line-height: 0.3em;
+
+
+		-ms-transition: all 200ms linear;
+		transition: all 200ms linear;
 	}
 
 	#autocomplete_input:hover {
-		width: 400px;
+		width: 25em;
 		background-color: black;
-		-ms-transition: width 200ms linear;
-		transition: width 200ms linear;
+		-ms-transition: all 200ms linear;
+		transition: all 200ms linear;
 	}
 
 	#autocomplete_input:focus {
-		width: 400px;
+		width: 25em;
 		background-color: black;
 		-ms-transition: width 200ms linear;
 		transition: width 200ms linear;
 	}
 
 	#autocomplete_input:not(:hover):not(:focus) ~ #invalid_location{
-		width: 138px;
+		width: 15em;
 	}
 
 	#invalid_location {
 		overflow:hidden;
-		position: absolute;
-		left: 90px;
-		top: 90px;
-		z-index: 100;
-		width: 388px;
+		width: 30em;
 		background-color: red;
 		color: white;
-		padding-left: 10px;
-		height: 20px;
-		line-height: 20px;
-		font-size: 12px;
+
+		height: 1.75em;
+		line-height: 1.5em;
+		font-size: 0.75em;
 		font-weight: bold;
 		display: block;
+
+		padding-left: 1em;
+
+		/* This stops the border from adding padding*/
+		box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		-webkit-box-sizing: border-box;
+
 		-ms-transition: all 200ms linear;
 		transition: all 200ms linear;
 	}
 
 	#invalid_location.hide_by_height {
-		height: 0px;
+		height: 0em;
 	}
 
 	#license {
@@ -113,13 +131,26 @@
 	#logo {
 		position: absolute;
 		right: 50px;
-		top: 30px;
-		width: 60px;
+		top: 50px;
+		width: 3em;
 	}
 
 	/* Default Class Overrides */
 	a {
 		color: white;
+	}
+
+	/***************/
+
+	#search_container {
+		position: absolute;
+		left: 50px;
+		top: 50px;
+	}
+
+	#search_bar {
+		display: inline-block;
+		margin-left: -0.4em;
 	}
 
 	/*  All the stupid Google Autocomplete Styling  */
@@ -164,16 +195,64 @@
 	}
 
 	.pac-icon:hover {
-		color: black;;
+		color: black;
+	}
+
+	/********************/
+
+	@media only screen and (max-device-width: 480px) {
+		body {
+			font-size: 3em;
+		}
+
+		#autocomplete_input {
+			width: 14em;
+		}
+
+		#autocomplete_input:hover {
+			width: 14em;
+		}
+
+		#autocomplete_input:focus {
+			width: 14em;
+		}
+
+		#autocomplete_input:not(:hover):not(:focus) ~ #invalid_location{
+			width: 16.8em;
+		}
+
+		#invalid_location {
+			width: 16.8em;
+		}
+
+		.pac-icon { 
+			height: 0em;
+		}
+
+		.pac-item {
+			height: 3.5em;
+			line-height: 3.5em;
+			font-size: 0.7em;
+			color: gray;
+		}
+
+		.pac-item span {
+			font-size: 1.25em;
+		}
 	}
 
 </style>
 
 <body onload="start()">
 	<canvas></canvas>
-	<input id="autocomplete_input"></input>
-	<div id="search_div"><i class="fas fa-search"></i></div>
-	<div id="invalid_location" class="hide_by_height">Nicht in NRW</div>
+
+	<div id="search_container">
+		<div id="search_div"><i class="fas fa-search"></i></div>
+		<div id="search_bar">
+			<input id="autocomplete_input"></input>
+			<div id="invalid_location" class="hide_by_height">Nicht in NRW</div>
+		</div>
+	</div>
 	<img id="logo" src="Images/Logo.png"></img>
 	<div id="license">Bereitsteller: <a href="https://open.nrw">Land NRW (2019)</a>
 		 // Daten: <a href="https://www.opengeodata.nrw.de/produkte/geobasis/dom/dom1l/index.html">Opengeodata.NRW</a> 
