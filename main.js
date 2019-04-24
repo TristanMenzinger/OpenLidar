@@ -1,8 +1,10 @@
+//threejs global variables
 let result;
 let scene;
 let camera;
 let controls;
 let renderer;
+let canvas;
 
 //set on the first load of a tile
 let global_offset_z = 0;
@@ -19,6 +21,24 @@ let MATERIAL_LOADING_HINT;
 let CONCURRENT_HTTP_REQUEST_COUNT = 0;
 
 let LOAD_AROUND_NR = 2;
+
+//Prevents scrolling the page 
+//function preventBehavior(e) {
+//	e.preventDefault(); 
+//}
+
+function onWindowResize( event ) {
+
+	//re-set aspect ratio
+	camera.aspect = window.innerWidth / window.innerHeight;
+
+	//necessary to keep dots nicely seperated
+	camera.updateProjectionMatrix();
+
+	//re-set renderer size
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.render( scene, camera );
+}
 
 function ll2WGS(lat, lng){
 	wgs_coords = proj4("+proj=utm +zone=32N, +ellps=WGS84 +datum=WGS84 +units=m +no_defs").forward([lng, lat]) //careful with lat lng order (!) they flipped it 
@@ -130,6 +150,9 @@ function initTransferControlsListener() {
 
 async function start() {
 
+	//resize listener for threejs
+	window.addEventListener( 'resize', onWindowResize, false );
+
 	GEOMETRY_LOADING_HINT = new THREE.PlaneGeometry(50, 50, 50);
 	MATERIAL_LOADING_HINT = new THREE.MeshBasicMaterial( {color: 0x9ACD32, transparent: true, opacity: 0.3, side: THREE.DoubleSide} );
 
@@ -139,7 +162,7 @@ async function start() {
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 	camera.up.set( 0, 0, 1 );
 
-	let canvas = document.querySelector("canvas");
+	canvas = document.querySelector("canvas");
 	renderer = new THREE.WebGLRenderer({canvas: canvas});
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	//renderer.setClearColor(0xffffff);
