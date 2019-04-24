@@ -23,9 +23,9 @@ let CONCURRENT_HTTP_REQUEST_COUNT = 0;
 let LOAD_AROUND_NR = 2;
 
 //Prevents scrolling the page 
-//function preventBehavior(e) {
-//	e.preventDefault(); 
-//}
+function preventBehavior(e) {
+	e.preventDefault(); 
+}
 
 function onWindowResize( event ) {
 
@@ -149,6 +149,8 @@ function initTransferControlsListener() {
 }
 
 async function start() {
+
+	document.addEventListener("touchmove", preventBehavior, {passive: false});
 
 	//resize listener for threejs
 	window.addEventListener( 'resize', onWindowResize, false );
