@@ -176,7 +176,11 @@ async function start() {
 	console.log(renderer.domElement)
 	//controls = new THREE.OrbitControls( camera, renderer.domElement );
 	controls = new THREE.OrbitControls( camera );
+
+	controls.screenSpacePanning = true;
+
 	console.log(controls)
+	
 	//.update() must be called after any manual changes to the camera's transform
 
 	// init_x = 304000;
