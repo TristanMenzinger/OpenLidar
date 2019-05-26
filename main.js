@@ -12,11 +12,15 @@ let first_search_done = null;
 
 // let zlib = require('browserify-zlib');
 
+//DEPRECATED
 let already_loaded = [];
+
 let all_tiles = [];
 
 let GEOMETRY_LOADING_HINT;
 let MATERIAL_LOADING_HINT;
+
+let wait_texture;
 
 let CONCURRENT_HTTP_REQUEST_COUNT = 0;
 
@@ -84,7 +88,8 @@ function initAutocomplete() {
 		}else {
 			hideWrongCountyNote();
 			wgs_coords = ll2WGS(place.geometry.location.lat(), place.geometry.location.lng());
-			zoomToNewPlace(wgs_coords[0], wgs_coords[1])
+			panToNewPlace(wgs_coords[0], wgs_coords[1])
+
 			first_search_done = true;
 		}
 	});
@@ -97,8 +102,10 @@ function euclidianDistance(wgs_coords_a, wgs_coords_b) {
 }
 
 function moveCamera(x, y) {
-	camera.position.set(x, y, 50); //camera.position.z
-	controls.target.set(x, y, 0); //controls.target.z
+	camera.position.set(x, y, global_offset_z + 400); //camera.position.z
+	controls.target.set(x, y, global_offset_z); //controls.target.z
+	//camera.position.set(this.x, this.y, this.z);
+	//camera.lookAt(new THREE.Vector3(0, 0, 0));
 	controls.update();
 }
 
@@ -106,7 +113,7 @@ function cameraToNormalPos() {
 
 }
 
-function zoomToNewPlace(x, y) {
+function panToNewPlace(x, y) {
 
 	x = roundDown50(x);
 	y = roundDown50(y);
@@ -178,9 +185,10 @@ async function start() {
 	controls = new THREE.OrbitControls( camera );
 
 	controls.screenSpacePanning = true;
+	controls.zoomSpeed = 0.5;
 
 	console.log(controls)
-	
+
 	//.update() must be called after any manual changes to the camera's transform
 
 	// init_x = 304000;
@@ -196,23 +204,29 @@ async function start() {
 	// 	}
 	// }
 
-	camera.position.set(25,25 , -32.44520525782314);
-	controls.target.set(25,25, -32.445261301389486);
+	camera.position.set(0,0, 30);
+	controls.target.set(0,0, 0);
 	controls.update();
 
 	let axesHelper = new THREE.AxesHelper(5);
 	scene.add(axesHelper);
 	console.log(axesHelper)
 
-	camera.position.z = 5;
-
-	redraw();
+	camera.position.z = 100;
 
 	// init_x = roundDown50(301917.9717594234);
 	// init_y = roundDown50(5643190.490984015);
 	// let newTile = new TileObject(init_x, init_y);
 
 	// newTile.downloadAndShow();
+
+	// let plane = new THREE.PlaneGeometry(50, 50, 50);
+	// let material = new THREE.MeshBasicMaterial( {color: 0x9ACD32, transparent: true, opacity: 0.3, side: THREE.DoubleSide} );
+	// var mesh = new THREE.Mesh( plane, material );
+	// scene.add(mesh)
+	// console.log(plane);
+
+	redraw();
 }
 
 function redraw() {
@@ -234,7 +248,12 @@ function redraw() {
 			//We're busy loading stuff, no need to start more requests
 			LOAD_AROUND_NR = 2;
 		}
+
 		loadTilesAtIfMissing(x_focus_center, y_focus_center, LOAD_AROUND_NR);
+
+		for(let a in all_tiles) {
+			all_tiles[a].rotateSlightly();
+		}
 	}
 };
 
@@ -458,7 +477,8 @@ async function getTileData(x50, y50) {
 async function loadPoints(x, y) {
 	// let request_url = "https://s3-eu-west-1.amazonaws.com/lisonrwdata/LIDAR_DATA/304000_5645000/"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/nrw/304000_5645000/color/"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-	let request_url = "https://f002.backblazeb2.com/file/lisonrw/wnrw/LidarData/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/wnrw/LidarData/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	let request_url = "https://f002.backblazeb2.com/file/alllidar/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	let xyz = await makeRequest("GET", request_url);
 	xyz = CSVToArray(xyz, ",")
 	return xyz;
@@ -469,7 +489,8 @@ async function loadPoints(x, y) {
 //Output  Array of HEX Color Strings
 async function loadColor(x, y) {
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/nrw/304000_5645000/xyz/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-	let request_url = "https://f002.backblazeb2.com/file/lisonrw/wnrw/ColorData/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/wnrw/ColorData/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	let request_url = "https://f002.backblazeb2.com/file/alllidar/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	let colors = await makeRequest("GET", request_url);
 	colors = CSVToArray(colors, " ")
 	return colors;
@@ -503,7 +524,6 @@ function createTilePoints(tileObject) {
 
 		const pt = tileObject.xyz[i];
 
-		//deduct the global offsets set on the initial load 
 		x = Number(pt[0]);
 		y = Number(pt[1]);
 		z = Number(pt[2]);
