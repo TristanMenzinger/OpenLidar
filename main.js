@@ -1,3 +1,5 @@
+//disable the overlay after the first search
+
 //threejs global variables
 let result;
 let scene;
@@ -8,9 +10,7 @@ let canvas;
 
 //set on the first load of a tile
 let global_offset_z = 0;
-let first_search_done = null;
-
-// let zlib = require('browserify-zlib');
+let first_search_done = false;
 
 let already_loaded = [];
 let all_tiles = [];
@@ -85,9 +85,21 @@ function initAutocomplete() {
 			hideWrongCountyNote();
 			wgs_coords = ll2WGS(place.geometry.location.lat(), place.geometry.location.lng());
 			zoomToNewPlace(wgs_coords[0], wgs_coords[1])
+			if(first_search_done == false) {
+				removeOverlay();
+			}
 			first_search_done = true;
 		}
+
+
 	});
+}
+
+/* GUI MODIFICATIONS */
+function removeOverlay() {
+	document.getElementById("logo").classList.remove("overlay_active");
+	document.getElementById("search_container").classList.remove("overlay_active");
+	document.getElementById("landing_overlay").classList.remove("overlay_active");
 }
 
 function euclidianDistance(wgs_coords_a, wgs_coords_b) {

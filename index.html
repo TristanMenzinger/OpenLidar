@@ -43,7 +43,7 @@
 
 		font-size: 1.2em;
 
-		border: 0.1em solid white;
+		border: 0.125em solid white;
 		color: white;
 
 		padding: 0.5em 0.5em;
@@ -133,6 +133,7 @@
 		right: 50px;
 		top: 50px;
 		width: 3em;
+		transition: all 500ms ease-in-out;
 	}
 
 	/* Default Class Overrides */
@@ -146,6 +147,7 @@
 		position: absolute;
 		left: 50px;
 		top: 50px;
+		transition: all 500ms ease-in-out;
 	}
 
 	#search_bar {
@@ -154,6 +156,11 @@
 	}
 
 	/*  All the stupid Google Autocomplete Styling  */
+
+	::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+		color: lightgrey;
+		opacity: 1; /* Firefox */
+	}
 
 	.pac-container, .pac-item {
 		background-color: black;
@@ -241,19 +248,52 @@
 		}
 	}
 
+	#landing_overlay.overlay_active {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		background-color: red;
+		visibility: visible;
+	}
+
+	#landing_overlay {
+		visibility: hidden;
+		background-color: black;
+	}
+
+	#logo.overlay_active {
+		left: calc(50% - 7.5em);
+		top: calc(30% - 10em);
+		width: 15em;
+	}
+
+	#search_container.overlay_active {
+		left: calc(50% - 12.5em);
+		top: 40%;
+	}
+	#search_container.overlay_active #autocomplete_input {
+		width: 25em;
+	}
+
 </style>
 
 <body onload="start()">
+
 	<canvas></canvas>
 
-	<div id="search_container">
+	<div id="landing_overlay" class="overlay_active">
+		<div></div>
+	</div>
+
+	<div id="search_container" class="overlay_active">
 		<div id="search_div"><i class="fas fa-search"></i></div>
 		<div id="search_bar">
-			<input id="autocomplete_input"></input>
+			<input id="autocomplete_input" class="centered"></input>
 			<div id="invalid_location" class="hide_by_height">Nicht in NRW</div>
 		</div>
 	</div>
-	<img id="logo" src="Images/Logo.png"></img>
+	
+	<img id="logo" src="Images/Logo.png" class="overlay_active"></img>
 	<div id="license">Bereitsteller: <a href="https://open.nrw">Land NRW (2019)</a>
 		 // Daten: <a href="https://www.opengeodata.nrw.de/produkte/geobasis/dom/dom1l/index.html">Opengeodata.NRW</a> 
 		 // Lizenz: <a href="http://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a></div>
