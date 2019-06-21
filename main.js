@@ -471,7 +471,8 @@ async function loadPoints(x, y) {
 	// let request_url = "https://s3-eu-west-1.amazonaws.com/lisonrwdata/LIDAR_DATA/304000_5645000/"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/nrw/304000_5645000/color/"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/wnrw/LidarData/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-	let request_url = "https://f002.backblazeb2.com/file/alllidar/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	//let request_url = "https://f002.backblazeb2.com/file/alllidar/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	let request_url = "https://f002.backblazeb2.com/file/lidar-data/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	let xyz = await makeRequest("GET", request_url);
 	xyz = CSVToArray(xyz, ",")
 	return xyz;
@@ -483,7 +484,8 @@ async function loadPoints(x, y) {
 async function loadColor(x, y) {
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/nrw/304000_5645000/xyz/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/wnrw/ColorData/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-	let request_url = "https://f002.backblazeb2.com/file/alllidar/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	//let request_url = "https://f002.backblazeb2.com/file/alllidar/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	let request_url = "https://f002.backblazeb2.com/file/lidar-data/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	let colors = await makeRequest("GET", request_url);
 	colors = CSVToArray(colors, " ")
 	return colors;
