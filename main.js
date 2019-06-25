@@ -7,6 +7,8 @@ let camera;
 let controls;
 let renderer;
 let canvas;
+let skydome;
+let groundplane; 
 
 //set on the first load of a tile
 let global_offset_z = 0;
@@ -90,8 +92,6 @@ function initAutocomplete() {
 			}
 			first_search_done = true;
 		}
-
-
 	});
 }
 
@@ -109,6 +109,14 @@ function euclidianDistance(wgs_coords_a, wgs_coords_b) {
 }
 
 function moveCamera(x, y) {
+	if(skydome != null) {
+		skydome.position.x = x;
+		skydome.position.y = y;	
+	}
+	if(groundplane != null) {
+		groundplane.position.x = x;
+		groundplane.position.y = y;
+	}
 	camera.position.set(x, y, 50); //camera.position.z
 	controls.target.set(x, y, 0); //controls.target.z
 	controls.update();
@@ -173,7 +181,7 @@ async function start() {
 	initTransferControlsListener();
 
 	scene = new THREE.Scene();
-	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 20000);
 	camera.up.set( 0, 0, 1 );
 
 	canvas = document.querySelector("canvas");
@@ -188,8 +196,8 @@ async function start() {
 	console.log(renderer.domElement)
 	//controls = new THREE.OrbitControls( camera, renderer.domElement );
 	controls = new THREE.OrbitControls( camera );
-
 	controls.screenSpacePanning = true;
+	controls.zoomSpeed = 3;
 
 	console.log(controls)
 	
@@ -218,20 +226,70 @@ async function start() {
 
 	camera.position.z = 5;
 
+	moveCamera(0,0);
 	redraw();
+
+	removeOverlay()
+
+	const color = 0xc9fc00;  // white
+	const near = 1000;
+	const far = 10000;
+	scene.fog = new THREE.Fog(color, near, far);
+
+	var geometry = new THREE.PlaneGeometry( 20000, 20000, 1 );
+	var material = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.DoubleSide} );
+	groundplane = new THREE.Mesh( geometry, material );
+	groundplane.position.z = -10;
+	scene.add( groundplane );
+
+	var loader = new THREE.TextureLoader();
+	loader.load('Images/sky2.jpg', function ( texture ) {
+		//(radius : Float, widthSegments : Integer, heightSegments : Integer, phiStart : Float, phiLength : Float, thetaStart : Float, thetaLength : Float)
+		var geometry = new THREE.SphereBufferGeometry(10000, 100, 6, 0, 2*Math.PI, 0, 1 * Math.PI);
+		//var geometry = new THREE.SphereGeometry(10000, 100, 6, 0, 2*Math.PI, 0, 1 * Math.PI);
+		//var geometry = new THREE.SphereGeometry(900, 32, 32 );
+		var material = new THREE.MeshBasicMaterial({map: texture, fog: true});
+		var uniforms = {
+			"texture": { type: "t", value: texture },
+		};
+		var material = new THREE.ShaderMaterial( {
+			uniforms		: uniforms,
+			vertexShader	: document.getElementById( 'vertex_shader' ).textContent,
+			fragmentShader	: document.getElementById( 'fragment_shader' ).textContent,
+		} );
+		skydome = new THREE.Mesh(geometry, material);
+		skydome.material.side = THREE.DoubleSide;
+		console.log(skydome);
+		scene.add(skydome);
+	});
 
 	// init_x = roundDown50(301917.9717594234);
 	// init_y = roundDown50(5643190.490984015);
 	// let newTile = new TileObject(init_x, init_y);
 
 	// newTile.downloadAndShow();
+
+	/*
+	var skyGeo = new THREE.SphereGeometry(100000, 25, 25); 
+	var loader  = new THREE.TextureLoader(),
+	texture = loader.load("Images/sky.jpg");
+	var material = new THREE.MeshPhongMaterial({ 
+		map: texture,
+	});
+	var sky = new THREE.Mesh(skyGeo, material);
+	sky.material.side = THREE.BackSide;
+	scene.add(sky);
+	*/
 }
 
 function redraw() {
 
 	requestAnimationFrame(redraw);
 
-	if(first_search_done != null) {
+	//Dont need this here but could be here? TODO!
+	renderer.render(scene, camera);
+
+	if(first_search_done) {
 
 		renderer.render(scene, camera);
 
@@ -684,3 +742,4 @@ function roundDown50(x) {
 function roundDown1000(x) {
     return Math.floor(x/1000)*1000;
 }
+
