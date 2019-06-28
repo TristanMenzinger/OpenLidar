@@ -14,6 +14,7 @@
 	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
 
+	<!--
 	<script id="vertex_shader" type="x-shader/x-vertex">
 
 	varying vec3 vNormal;
@@ -35,19 +36,14 @@
 	varying vec3 vNormal;
 	
 	void main() {
-	
 		vec2 uv = normalize( vNormal ).xy * 0.34 + 0.5;
-	
 		vec3 color = texture2D( texture, uv ).rgb;
-		
 		//From where to draw nothing 
 		if ( vNormal.z < - 0.3 ) color = vec3( 0, 0 ,0 ); // back of eye
-		
 		gl_FragColor = vec4( color, 1.0 );
-	
 	}
-	
-	</script>		
+	</script>
+	-->
 </head>
 
 <style>

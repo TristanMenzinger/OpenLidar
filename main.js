@@ -14,15 +14,35 @@ let groundplane;
 let global_offset_z = 0;
 let first_search_done = false;
 
+//
 let already_loaded = [];
 let all_tiles = [];
 
+//Loading tile listener
 let GEOMETRY_LOADING_HINT;
 let MATERIAL_LOADING_HINT;
 
-let CONCURRENT_HTTP_REQUEST_COUNT = 0;
+//Global variable for http requests (to keep track of them )
+let global_concurrent_req_count = 0;
 
-let LOAD_AROUND_NR = 2;
+//The amount of tiles to load around the center of a search
+//let TARGET_LOAD_AROUND_NR_SEARCH = 1;
+
+//The amount of tiles to load around the center of a movement
+let TARGET_LOAD_AROUND_NR = 4;
+
+//Check for new tiles to load every X cycles. The work() function is then called.
+const WORKER_CYCLE_MAX = 30;
+
+//Draw distance of Camera
+const CAMERA_DRAW_DISTANCE = 2000;
+
+//When to start fading out tiles -> also check Camera draw distance.
+const FADE_OUT_START = 500;
+const FADE_OUT_END = 700;
+const FADE_OUT_DELTA = FADE_OUT_END - FADE_OUT_START;
+const HIDE_DISTANCE = FADE_OUT_END + 100;
+const REMOVE_FROM_RAM_DISTANCE = 1000;
 
 //Prevents scrolling the page 
 function preventBehavior(e) {
@@ -65,7 +85,7 @@ function initAutocomplete() {
 	let input = document.getElementById('autocomplete_input');
 	let autocomplete = new google.maps.places.Autocomplete(input);
 	autocomplete.setFields(['address_components', 'geometry','name']);
-	autocomplete.setTypes(['geocode'])
+	//autocomplete.setTypes(['geocode']);
 	console.log(autocomplete)
 
 	let infowindow = new google.maps.InfoWindow();
@@ -109,14 +129,14 @@ function euclidianDistance(wgs_coords_a, wgs_coords_b) {
 }
 
 function moveCamera(x, y) {
-	if(skydome != null) {
-		skydome.position.x = x;
-		skydome.position.y = y;	
-	}
-	if(groundplane != null) {
-		groundplane.position.x = x;
-		groundplane.position.y = y;
-	}
+	// if(skydome != null) {
+	// 	skydome.position.x = x;
+	// 	skydome.position.y = y;
+	// }
+	// if(groundplane != null) {
+	// 	groundplane.position.x = x;
+	// 	groundplane.position.y = y;
+	// }
 	camera.position.set(x, y, 50); //camera.position.z
 	controls.target.set(x, y, 0); //controls.target.z
 	controls.update();
@@ -175,20 +195,24 @@ async function start() {
 	//resize listener for threejs
 	window.addEventListener( 'resize', onWindowResize, false );
 
+	//TODO: Check for other initialization ?
+	//Initialize the loading-tile material 
 	GEOMETRY_LOADING_HINT = new THREE.PlaneGeometry(50, 50, 50);
 	MATERIAL_LOADING_HINT = new THREE.MeshBasicMaterial( {color: 0x9ACD32, transparent: true, opacity: 0.3, side: THREE.DoubleSide} );
 
 	initTransferControlsListener();
 
 	scene = new THREE.Scene();
-	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 20000);
+	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, CAMERA_DRAW_DISTANCE);
+	//camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 20000);
 	camera.up.set( 0, 0, 1 );
 
 	canvas = document.querySelector("canvas");
-	renderer = new THREE.WebGLRenderer({canvas: canvas});
+	renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	//renderer.setClearColor(0xffffff);
 	renderer.setClearColor(0x000000);
+	renderer.shadowMapEnabled = false;
 
 	//document.getElementById("threejs_container").appendChild(renderer.domElement);
 
@@ -229,8 +253,9 @@ async function start() {
 	moveCamera(0,0);
 	redraw();
 
-	removeOverlay()
+	//removeOverlay()
 
+	/*
 	const color = 0xc9fc00;  // white
 	const near = 1000;
 	const far = 10000;
@@ -268,7 +293,7 @@ async function start() {
 	// let newTile = new TileObject(init_x, init_y);
 
 	// newTile.downloadAndShow();
-
+	*/
 	/*
 	var skyGeo = new THREE.SphereGeometry(100000, 25, 25); 
 	var loader  = new THREE.TextureLoader(),
@@ -282,37 +307,43 @@ async function start() {
 	*/
 }
 
+let worker_cycle = 0;
+let load_around_nr = 1;
 function redraw() {
 
-	requestAnimationFrame(redraw);
-
 	//Dont need this here but could be here? TODO!
-	renderer.render(scene, camera);
+	if(worker_cycle >= WORKER_CYCLE_MAX) {
+		work();
+	}
+	worker_cycle++;
 
+	requestAnimationFrame(redraw);
+	renderer.render(scene, camera);
+};
+
+//Checks for new tiles 
+function work() {
 	if(first_search_done) {
 
-		renderer.render(scene, camera);
+		fadeOut();
 
 		x_focus_center = roundDown50(controls.target.x);
 		y_focus_center = roundDown50(controls.target.y);
 
 		//this is slighty inefficient but the easiest way (no request leads to requests which leads to resets, which then leads to more requests... etc)
-		if(CONCURRENT_HTTP_REQUEST_COUNT === 0 && LOAD_AROUND_NR < 5) {
+		if(global_concurrent_req_count === 0 && load_around_nr < TARGET_LOAD_AROUND_NR) {
 			//increase area around
-			LOAD_AROUND_NR =  LOAD_AROUND_NR + 1;
+			load_around_nr =  load_around_nr + 1;
 		}else {
 			//We're busy loading stuff, no need to start more requests
-			LOAD_AROUND_NR = 2;
 		}
-		loadTilesAtIfMissing(x_focus_center, y_focus_center, LOAD_AROUND_NR);
+		loadTilesAtIfMissing(x_focus_center, y_focus_center, load_around_nr);
 	}
-};
+}
 
+//Show or load tiles at coordinates x and y missing
+//Input   x_center, y_center
 function loadTilesAtIfMissing(x_focus_center, y_focus_center, load_around_nr) {
-
-	if(load_around_nr === undefined || load_around_nr === null) {
-		load_around_nr = 3;
-	}
 
 	delta = [0]
 	for(let i = load_around_nr; i > 0; i--) {
@@ -321,38 +352,50 @@ function loadTilesAtIfMissing(x_focus_center, y_focus_center, load_around_nr) {
 	for(let i = 1; i <= load_around_nr; i++) {
 		delta.push(50*i)
 	}
-
 	for(let i in delta) {
 		for(let j in delta) {
-
 			x_focus = x_focus_center + delta[i]
 			y_focus = y_focus_center + delta[j]
-
 			let found = all_tiles.find(chunk => {
 				return (chunk.x50) === (x_focus) && (chunk.y50) === (y_focus)
 			})
-
 			if(found === undefined) {
-				//No yet defined -> download then show it
+				//No yet downloaded -> download the tile and then show it
 				let newTile = new TileObject(x_focus, y_focus);
 				newTile.downloadAndShow();
 				newTile.download_started = true;
-			} else if(!found.isShowing() && found.isDownloadStarted() && found.isDownloadFinished()) {
-				//Is fully downloaded and not showing -> show it
-				found.show();
-			}
+			} 
 		}
 	}
 }
 
-
+//Checks how many tiles are showing at the moment
+//Returns	Nr of tiles showing
 function countShowing() {
 	return all_tiles.reduce(
 		function(total, tileObject){
-			return tileObject.isShowing() ? total+1 : total
+			return tileObject.isShowing() ? total + 1 : total
 		}, 
-		0
+		0 
 	);
+}
+
+function fadeOut() {
+	all_tiles.map(tile => {
+		let distance = euclidianDistance([tile.x50, tile.y50], [controls.target.x, controls.target.y])
+		
+		if(distance > REMOVE_FROM_RAM_DISTANCE) {
+			//remove from ram
+			tile.delete()
+		}else if (distance > HIDE_DISTANCE) {
+			//hide tile
+		}else {
+			//MIN: 300, MAX: 700
+			distance = Math.min(Math.max(FADE_OUT_START, distance), FADE_OUT_END);
+			const perc = (1 / FADE_OUT_DELTA) * (distance - FADE_OUT_START);
+			tile.hide_percentage(perc)
+		}
+	})
 }
 
 function autohide(viewpoint_x, viewpoint_y) {
@@ -388,10 +431,12 @@ class TileObject {
 		this.x50 = x50;
 		this.y50 = y50;
 
+		this.firstShow = true;
 		this.showing = false;
 		this.download_started = false;
 		this.download_finished = false;
 		this.showing_loading_hint = false;
+		this.hidingPercentage = undefined;
 		
 		all_tiles.push(this);
 		return this;
@@ -399,12 +444,12 @@ class TileObject {
 
 	downloadStarted() {
 		this.download_started = true;
-		CONCURRENT_HTTP_REQUEST_COUNT++;
+		global_concurrent_req_count++;
 	}
 
 	downloadEnded() {
 		this.download_finished = true;
-		CONCURRENT_HTTP_REQUEST_COUNT--;
+		global_concurrent_req_count--;
 	}
 
 	isShowing() {
@@ -424,17 +469,19 @@ class TileObject {
 		delete this.colors;
 	}
 
+	delete() {
+		this.hide();
+		var index = all_tiles.indexOf(this);
+		if (index !== -1) all_tiles.splice(index, 1);
+		delete this;
+	}
+
 	async downloadData() {		
 		this.downloadStarted();
-
-		// while(CONCURRENT_HTTP_REQUEST_COUNT > 16) {
-		// 	console.log("Concurrency limit reached, waiting");
-		// 	sleep(30);
-		// }
-
 		let data = await getTileData(this.x50, this.y50);
 		this.xyz = data[0];
 		this.colors = data[1];
+		this.nr_of_points = this.xyz.length;
 		this.downloadEnded();
 		return this;
 	}
@@ -471,9 +518,27 @@ class TileObject {
 	}
 
 	hide() {
+		this.hidden = true;
+		scene.remove(this.threejs_points);
+	}
+
+	//Doesnt work - why?
+	hide() {
+		console.log(this)
+		console.log(scene)
 		if(this.isShowing()) {
-			this.showing = false;
 			scene.remove(this.threejs_points); 
+			this.showing = false;
+		}
+	}
+
+	hide_percentage(percentage) {
+		if(this.threejs_points != undefined && this.hidingPercentage != percentage) {
+			if(this.isShowing == false) {
+				//this.
+			}
+			this.hidingPercentage = percentage;
+			this.threejs_points.geometry.setDrawRange(0,this.nr_of_points*(1-percentage))
 		}
 	}
 
@@ -488,34 +553,9 @@ class TileObject {
 	}
 }
 
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function getpoints(init_x, init_y) {
-	to = 4;
-	for(let x = 0; x < to; x++) {
-		for(let y = 0; y < to; y++) {
-			x50 = init_x + 50 * x;
-			y50 = init_y + 50 * y;
-
-			let obj = {};
-			obj.x = x50 - global_offset_x;
-			obj.y = y50 - global_offset_y;
-
-			already_loaded.push(obj)
-			getTile(x50, y50, obj);
-			// xyz = await loadPoints(x50, y50);
-			// colors = await loadColor(x50, y50);
-			// addPointsToScene(scene, colors, xyz, x50, y50, 100)
-		}
-	}
-}
-
 //TODO:	Error handling
-
 //Fetches and adds to the global scene a 50x50 Tile for given x and y coordinates via the loadPoints and loadColor methods
-//Input 	x, y (lower x coordinate, lower y coordinate)
+//Input	x, y (lower x coordinate, lower y coordinate)
 async function getTileData(x50, y50) {
 	let xyz = await loadPoints(x50, y50);
 	let colors = await loadColor(x50, y50);
@@ -523,13 +563,9 @@ async function getTileData(x50, y50) {
 }
 
 //Load the color data from backblaze via HTTP-Request given x and y as 50m-granularity coordinates
-//Input   x, y
-//Output  Array of Points
+//Params	x, y
+//Return	Array of Points
 async function loadPoints(x, y) {
-	// let request_url = "https://s3-eu-west-1.amazonaws.com/lisonrwdata/LIDAR_DATA/304000_5645000/"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/nrw/304000_5645000/color/"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/wnrw/LidarData/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-	//let request_url = "https://f002.backblazeb2.com/file/alllidar/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	let request_url = "https://f002.backblazeb2.com/file/lidar-data/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	let xyz = await makeRequest("GET", request_url);
 	xyz = CSVToArray(xyz, ",")
@@ -537,21 +573,33 @@ async function loadPoints(x, y) {
 }
 
 //Load the color data from backblaze via HTTP-Request
-//Input   x, y
-//Output  Array of HEX Color Strings
+//Params	x, y
+//Return	Array of HEX Color Strings
 async function loadColor(x, y) {
-	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/nrw/304000_5645000/xyz/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/wnrw/ColorData/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-	//let request_url = "https://f002.backblazeb2.com/file/alllidar/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	let request_url = "https://f002.backblazeb2.com/file/lidar-data/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	let colors = await makeRequest("GET", request_url);
 	colors = CSVToArray(colors, " ")
 	return colors;
 }
 
+function shuffle_arrays(obj1, obj2) {
+	var index = obj1.length;
+	var rnd, tmp1, tmp2;
+	while (index) {
+		rnd = Math.floor(Math.random() * index);
+		index -= 1;
+		tmp1 = obj1[index];
+		tmp2 = obj2[index];
+		obj1[index] = obj1[rnd];
+		obj2[index] = obj2[rnd];
+		obj1[rnd] = tmp1;
+		obj2[rnd] = tmp2;
+	}
+}
+
 //Add a set of points to the scene
-//Input scene, colors, points, offset's in all directions
-function createTilePoints(tileObject) {
+//Params	scene, colors, points, offset's in all directions
+function createTilePoints(tileObject, shufflePoints = true) {
 
 	//TODO: Fix this workaround with parsing - last row is always "dead" for some reason
 	tileObject.xyz.pop()
@@ -570,6 +618,10 @@ function createTilePoints(tileObject) {
 			avg_z = avg_z + Number(tileObject.xyz[i][2]);
 		}
 		global_offset_z = avg_z / tileObject.xyz.length;
+	}
+
+	if(shufflePoints == true) {
+		shuffle_arrays(tileObject.xyz, tileObject.colors)
 	}
 
 	//TODO:	Do this with the Javascript Numpy equivalent 
@@ -599,7 +651,6 @@ function createTilePoints(tileObject) {
 	}
 
 	geometry.addAttribute('position', new THREE.Float32BufferAttribute(n_positions, 3));
-
 	//Simpifly this with a 1-Element-Array of Colors
 	geometry.addAttribute('color', new THREE.Float32BufferAttribute(n_colors, 3));
 
@@ -609,7 +660,7 @@ function createTilePoints(tileObject) {
 }
 
 //Convert a "5a7aff" HEX to a (255,255,255) RGB Value
-//Input   HEX String
+//Params   HEX String
 //Return  RGB Array
 function hexToRgb(hex) {
 	// hex = hex.replace("#", "")
@@ -621,7 +672,7 @@ function hexToRgb(hex) {
 }
 
 //Make an URL Request
-//Input   Request Type (GET, POST, ...)
+//Params   Request Type (GET, POST, ...)
 //Return  Promise with resolve value of pako-inflated (ungzipped) string of values
 function makeRequest(method, url) {
 	return new Promise(function (resolve, reject) {
@@ -653,9 +704,9 @@ function makeRequest(method, url) {
 }
 
 //Convert a String to an Array
-//Input   inputString, delimiter
-//Output  Array
-//From: STACKOVERFLOW ---- ADD SOURCE
+//Params  CSVString, delimiter
+//Return  Array
+//From:   STACKOVERFLOW ---- ADD SOURCE
 function CSVToArray(strData, strDelimiter) {
 	// Check to see if the delimiter is defined. If not,
 	// then default to comma.
@@ -675,7 +726,6 @@ function CSVToArray(strData, strDelimiter) {
 		),
 		"gi"
 	);
-
 
 	// Create an array to hold our data. Give the array
 	// a default empty first row.
@@ -740,6 +790,6 @@ function roundDown50(x) {
 }
 
 function roundDown1000(x) {
-    return Math.floor(x/1000)*1000;
+	return Math.floor(x/1000)*1000;
 }
 
