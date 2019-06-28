@@ -108,6 +108,7 @@ function initAutocomplete() {
 			wgs_coords = ll2WGS(place.geometry.location.lat(), place.geometry.location.lng());
 			zoomToNewPlace(wgs_coords[0], wgs_coords[1])
 			if(first_search_done == false) {
+				//works
 				removeOverlay();
 			}
 			first_search_done = true;
