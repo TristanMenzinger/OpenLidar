@@ -23,11 +23,11 @@ let CONCURRENT_HTTP_REQUEST_COUNT = 0;
 let LOAD_AROUND_NR = 2;
 
 //Prevents scrolling the page 
-function preventBehavior(e) {
+let preventBehavior = (e) => {
 	e.preventDefault(); 
 }
 
-function onWindowResize( event ) {
+let onWindowResize = (event) => {
 
 	//re-set aspect ratio
 	camera.aspect = window.innerWidth / window.innerHeight;
@@ -40,25 +40,25 @@ function onWindowResize( event ) {
 	renderer.render( scene, camera );
 }
 
-function ll2WGS(lat, lng){
+let ll2WGS = (lat, lng )=> {
 	wgs_coords = proj4("+proj=utm +zone=32N, +ellps=WGS84 +datum=WGS84 +units=m +no_defs").forward([lng, lat]) //careful with lat lng order (!) they flipped it 
 	return wgs_coords;
 }
 
-function WGS2ll(x, y){
+let WGS2ll = (x, y) => {
 	latlng_coords = proj4("+proj=utm +zone=32N, +ellps=WGS84 +datum=WGS84 +units=m +no_defs").convert([x, y]) //careful with order, here its x and then y
 	return latlng_coords
 }
 
-function showWrongCountyNote() {
+let showWrongCountyNote = () => {
 	document.getElementById("invalid_location").classList.remove("hide_by_height");
 }
 
-function hideWrongCountyNote() {
+let hideWrongCountyNote = () => {
 	document.getElementById("invalid_location").classList.add("hide_by_height");
 }
 
-function initAutocomplete() {
+initAutocomplete = () => {
 
 	let input = document.getElementById('autocomplete_input');
 	let autocomplete = new google.maps.places.Autocomplete(input);
@@ -90,23 +90,23 @@ function initAutocomplete() {
 	});
 }
 
-function euclidianDistance(wgs_coords_a, wgs_coords_b) {
+let euclidianDistance = (wgs_coords_a, wgs_coords_b) => {
 	var a = wgs_coords_a[0] - wgs_coords_b[0];
 	var b = wgs_coords_a[1] - wgs_coords_b[1];
 	return Math.sqrt( a*a + b*b );
 }
 
-function moveCamera(x, y) {
+let moveCamera = (x, y) => {
 	camera.position.set(x, y, 50); //camera.position.z
 	controls.target.set(x, y, 0); //controls.target.z
 	controls.update();
 }
 
-function cameraToNormalPos() {
+let cameraToNormalPos = () => {
 
 }
 
-function zoomToNewPlace(x, y) {
+let zoomToNewPlace = (x, y) => {
 
 	x = roundDown50(x);
 	y = roundDown50(y);
@@ -121,7 +121,7 @@ function zoomToNewPlace(x, y) {
 	moveCamera(x, y)
 }
 
-function initTransferControlsListener() {
+let initTransferControlsListener = () => {
 
 	autocomplete_input = document.getElementById("autocomplete_input");
 	autocomplete_input.addEventListener("mouseover", function() {
@@ -133,7 +133,7 @@ function initTransferControlsListener() {
 		autocomplete_input.blur();
 	});
 
-	autocomplete_input.addEventListener('keypress', function (e) {
+	autocomplete_input.addEventListener('keypress', (e) => {
 		let key = e.which || e.keyCode;
 		if (key === 13) { // 13 is enter
 			controls.enabled = true;
@@ -148,7 +148,7 @@ function initTransferControlsListener() {
 	*/
 }
 
-async function start() {
+let start = async () => {
 
 	document.addEventListener("touchmove", preventBehavior, {passive: false});
 
@@ -207,6 +207,7 @@ async function start() {
 	camera.position.z = 5;
 
 	redraw();
+	init_worker();
 
 	// init_x = roundDown50(301917.9717594234);
 	// init_y = roundDown50(5643190.490984015);
@@ -215,30 +216,53 @@ async function start() {
 	// newTile.downloadAndShow();
 }
 
-function redraw() {
+let init_worker = () => {
+	setInterval(() => { 
+		if(first_search_done != null) {
+			console.log("worker checked")
+			x_focus_center = roundDown50(controls.target.x);
+			y_focus_center = roundDown50(controls.target.y);
 
+			//this is slighty inefficient but the easiest way (no request leads to requests which leads to resets, which then leads to more requests... etc)
+			if(CONCURRENT_HTTP_REQUEST_COUNT === 0 && LOAD_AROUND_NR < 5) {
+				//increase area around
+				LOAD_AROUND_NR = LOAD_AROUND_NR + 1;
+			}else {
+				//We're busy loading stuff, no need to start more requests
+				LOAD_AROUND_NR = 2;
+			}
+			loadTilesAtIfMissing(x_focus_center, y_focus_center, LOAD_AROUND_NR);
+		}
+	}, 500);
+}
+
+let redraw = () => {
+
+	renderer.render(scene, camera);
 	requestAnimationFrame(redraw);
 
-	if(first_search_done != null) {
+	// if(first_search_done != null) {
 
-		renderer.render(scene, camera);
+	// 	renderer.render(scene, camera);
 
-		x_focus_center = roundDown50(controls.target.x);
-		y_focus_center = roundDown50(controls.target.y);
+	// 	x_focus_center = roundDown50(controls.target.x);
+	// 	y_focus_center = roundDown50(controls.target.y);
 
-		//this is slighty inefficient but the easiest way (no request leads to requests which leads to resets, which then leads to more requests... etc)
-		if(CONCURRENT_HTTP_REQUEST_COUNT === 0 && LOAD_AROUND_NR < 5) {
-			//increase area around
-			LOAD_AROUND_NR =  LOAD_AROUND_NR + 1;
-		}else {
-			//We're busy loading stuff, no need to start more requests
-			LOAD_AROUND_NR = 2;
-		}
-		loadTilesAtIfMissing(x_focus_center, y_focus_center, LOAD_AROUND_NR);
-	}
+	// 	//this is slighty inefficient but the easiest way (no request leads to requests which leads to resets, which then leads to more requests... etc)
+	// 	if(CONCURRENT_HTTP_REQUEST_COUNT === 0 && LOAD_AROUND_NR < 5) {
+	// 		//increase area around
+	// 		LOAD_AROUND_NR =  LOAD_AROUND_NR + 1;
+	// 	}else {
+	// 		//We're busy loading stuff, no need to start more requests
+	// 		LOAD_AROUND_NR = 2;
+	// 	}
+	// 	loadTilesAtIfMissing(x_focus_center, y_focus_center, LOAD_AROUND_NR);
+	// }
+	
+	// requestAnimationFrame(redraw);
 };
 
-function loadTilesAtIfMissing(x_focus_center, y_focus_center, load_around_nr) {
+let loadTilesAtIfMissing = (x_focus_center, y_focus_center, load_around_nr) => {
 
 	if(load_around_nr === undefined || load_around_nr === null) {
 		load_around_nr = 3;
@@ -276,7 +300,7 @@ function loadTilesAtIfMissing(x_focus_center, y_focus_center, load_around_nr) {
 }
 
 
-function countShowing() {
+let countShowing = () => {
 	return all_tiles.reduce(
 		function(total, tileObject){
 			return tileObject.isShowing() ? total+1 : total
@@ -285,7 +309,7 @@ function countShowing() {
 	);
 }
 
-function autohide(viewpoint_x, viewpoint_y) {
+let autohide = (viewpoint_x, viewpoint_y) => {
 	x_focus_center = roundDown50(controls.target.x)
 	y_focus_center = roundDown50(controls.target.y)
 
@@ -327,34 +351,34 @@ class TileObject {
 		return this;
 	}
 
-	downloadStarted() {
+	downloadStarted = () => {
 		this.download_started = true;
 		CONCURRENT_HTTP_REQUEST_COUNT++;
 	}
 
-	downloadEnded() {
+	downloadEnded = () => {
 		this.download_finished = true;
 		CONCURRENT_HTTP_REQUEST_COUNT--;
 	}
 
-	isShowing() {
+	isShowing = () => {
 		return this.showing;
 	}
 
-	isDownloadStarted() {
+	isDownloadStarted = () => {
 		return this.download_started;
 	}
 
-	isDownloadFinished() {
+	isDownloadFinished = () => {
 		return this.download_finished;
 	}
 
-	removeRawData() {
+	removeRawData = () => {
 		delete this.xyz;
 		delete this.colors;
 	}
 
-	async downloadData() {		
+	downloadData = async () => {		
 		this.downloadStarted();
 
 		// while(CONCURRENT_HTTP_REQUEST_COUNT > 16) {
@@ -369,7 +393,7 @@ class TileObject {
 		return this;
 	}
 
-	showLoadingHint() {
+	showLoadingHint = () => {
 		if(this.showing_loading_hint == false) {
 			let bound_center_x = this.x50 + 25;
 			let bound_center_y = this.y50 + 25;
@@ -382,14 +406,14 @@ class TileObject {
 		}
 	}
 
-	removeLoadingHint() {
+	removeLoadingHint = () => {
 		if(this.showing_loading_hint) {
 			this.showing_loading_hint = false;
 			scene.remove(this.loading_hint_plane);
 		}
 	}
 
-	show() {
+	show = () => {
 		if(!this.isShowing()) {
 			this.showing = true;
 			if(this.threejs_points === undefined || this.threejs_points === null) {
@@ -400,14 +424,14 @@ class TileObject {
 		}
 	}
 
-	hide() {
+	hide = () => {
 		if(this.isShowing()) {
 			this.showing = false;
 			scene.remove(this.threejs_points); 
 		}
 	}
 
-	async downloadAndShow() {
+	downloadAndShow = async () => {
 		//Only if not yet started to download or finished shall we download the data again
 		if(!this.isDownloadStarted() && !this.isDownloadFinished()) {
 			this.showLoadingHint()
@@ -418,11 +442,11 @@ class TileObject {
 	}
 }
 
-function sleep(ms) {
+let sleep = (ms) => {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function getpoints(init_x, init_y) {
+let getpoints = async (init_x, init_y) => {
 	to = 4;
 	for(let x = 0; x < to; x++) {
 		for(let y = 0; y < to; y++) {
@@ -446,7 +470,7 @@ async function getpoints(init_x, init_y) {
 
 //Fetches and adds to the global scene a 50x50 Tile for given x and y coordinates via the loadPoints and loadColor methods
 //Input 	x, y (lower x coordinate, lower y coordinate)
-async function getTileData(x50, y50) {
+let getTileData = async (x50, y50) => {
 	let xyz = await loadPoints(x50, y50);
 	let colors = await loadColor(x50, y50);
 	return [xyz, colors];
@@ -455,7 +479,7 @@ async function getTileData(x50, y50) {
 //Load the color data from backblaze via HTTP-Request given x and y as 50m-granularity coordinates
 //Input   x, y
 //Output  Array of Points
-async function loadPoints(x, y) {
+let loadPoints = async (x, y) => {
 	// let request_url = "https://s3-eu-west-1.amazonaws.com/lisonrwdata/LIDAR_DATA/304000_5645000/"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/nrw/304000_5645000/color/"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/wnrw/LidarData/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
@@ -469,7 +493,7 @@ async function loadPoints(x, y) {
 //Load the color data from backblaze via HTTP-Request
 //Input   x, y
 //Output  Array of HEX Color Strings
-async function loadColor(x, y) {
+let loadColor = async (x, y) => {
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/nrw/304000_5645000/xyz/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/wnrw/ColorData/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/alllidar/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
@@ -481,7 +505,7 @@ async function loadColor(x, y) {
 
 //Add a set of points to the scene
 //Input scene, colors, points, offset's in all directions
-function createTilePoints(tileObject) {
+let createTilePoints = (tileObject) => {
 
 	//TODO: Fix this workaround with parsing - last row is always "dead" for some reason
 	tileObject.xyz.pop()
@@ -541,7 +565,7 @@ function createTilePoints(tileObject) {
 //Convert a "5a7aff" HEX to a (255,255,255) RGB Value
 //Input   HEX String
 //Return  RGB Array
-function hexToRgb(hex) {
+let hexToRgb = (hex) => {
 	// hex = hex.replace("#", "")
 	let bigint = parseInt(hex, 16);
 	let r = (bigint >> 16) & 255;
@@ -553,12 +577,12 @@ function hexToRgb(hex) {
 //Make an URL Request
 //Input   Request Type (GET, POST, ...)
 //Return  Promise with resolve value of pako-inflated (ungzipped) string of values
-function makeRequest(method, url) {
-	return new Promise(function (resolve, reject) {
+let makeRequest = (method, url) => {
+	return new Promise((resolve, reject) => {
 		let xhr = new XMLHttpRequest();
 		xhr.open(method, url);
 		xhr.responseType = "arraybuffer"; //for ungzip with pako
-		xhr.onload = function () {
+		xhr.onload = function() {
 			//console.log(xhr)
 			if (this.status >= 200 && this.status < 300) {
 				let arrayBuffer = xhr.response; // Note: not oReq.responseText
@@ -572,7 +596,7 @@ function makeRequest(method, url) {
 				});
 			}
 		};
-		xhr.onerror = function () {
+		xhr.onerror = function() {
 			reject({
 				status: this.status,
 				statusText: xhr.statusText
@@ -586,7 +610,7 @@ function makeRequest(method, url) {
 //Input   inputString, delimiter
 //Output  Array
 //From: STACKOVERFLOW ---- ADD SOURCE
-function CSVToArray(strData, strDelimiter) {
+let CSVToArray = (strData, strDelimiter) => {
 	// Check to see if the delimiter is defined. If not,
 	// then default to comma.
 	strDelimiter = (strDelimiter || ",");
@@ -665,10 +689,10 @@ function CSVToArray(strData, strDelimiter) {
 	return (arrData);
 }
 
-function roundDown50(x) {
+let roundDown50 = (x) => {
 	return Math.floor(x/50)*50;
 }
 
-function roundDown1000(x) {
+let roundDown1000 = (x) => {
     return Math.floor(x/1000)*1000;
 }
