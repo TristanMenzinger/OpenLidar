@@ -8,12 +8,16 @@ let canvas;
 
 //set on the first load of a tile
 let global_offset_z = 0;
-let first_search_done = null;
+let first_search_done = false;
 
 // let zlib = require('browserify-zlib');
 
-let already_loaded = [];
+// Deprecated v0.3
+// let already_loaded = [];
+
 let all_tiles = [];
+
+let all_hint_tiles = [];
 
 let GEOMETRY_LOADING_HINT;
 let MATERIAL_LOADING_HINT;
@@ -85,6 +89,10 @@ initAutocomplete = () => {
 			hideWrongCountyNote();
 			wgs_coords = ll2WGS(place.geometry.location.lat(), place.geometry.location.lng());
 			zoomToNewPlace(wgs_coords[0], wgs_coords[1])
+			if(first_search_done === false) {
+				removeOverlay();
+				console.log("removed overlay");
+			}
 			first_search_done = true;
 		}
 	});
@@ -161,14 +169,15 @@ let start = async () => {
 	initTransferControlsListener();
 
 	scene = new THREE.Scene();
-	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
 	camera.up.set( 0, 0, 1 );
 
 	canvas = document.querySelector("canvas");
 	renderer = new THREE.WebGLRenderer({canvas: canvas});
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	//renderer.setClearColor(0xffffff);
-	renderer.setClearColor(0x000000);
+	// renderer.setClearColor(0x000000);
+	renderer.setClearColor(0x696969);
 
 	//document.getElementById("threejs_container").appendChild(renderer.domElement);
 
@@ -214,12 +223,37 @@ let start = async () => {
 	// let newTile = new TileObject(init_x, init_y);
 
 	// newTile.downloadAndShow();
+
+	// renderer.domElement.addEventListener("dblclick", onclick, true);
+	renderer.domElement.addEventListener("click", onclick, true);
+	raycaster = new THREE.Raycaster();
+}
+
+function onclick(event) {
+
+	// console.log("clicked")
+
+	var mouse = new THREE.Vector2();
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+	raycaster.setFromCamera( mouse.clone(), camera ); 
+
+	let all_hints = all_hint_tiles.map(x => x.invisible_hint);
+	console.log(all_hints)
+	var intersects = raycaster.intersectObjects(all_hints); 
+
+	// console.log("intersects length", intersects.length)
+	if (intersects.length > 0) {
+		var selectedObject = intersects[0];
+		selectedObject.object.visible = false;
+		selectedObject.object.parent_object.clicked();
+	}
 }
 
 let init_worker = () => {
 	setInterval(() => { 
-		if(first_search_done != null) {
-			console.log("worker checked")
+		if(first_search_done === true) {
+			// console.log("worker checked")
 			x_focus_center = roundDown50(controls.target.x);
 			y_focus_center = roundDown50(controls.target.y);
 
@@ -262,6 +296,15 @@ let redraw = () => {
 	// requestAnimationFrame(redraw);
 };
 
+let set_global_offset_z = (offset_z) => {
+	global_offset_z = offset_z;
+	all_hint_tiles.map(hint_tile => {
+		hint_tile.reset_global_offset_z();
+		return hint_tile;
+	})
+	camera.position.z = global_offset_z + 200;
+} 
+
 let loadTilesAtIfMissing = (x_focus_center, y_focus_center, load_around_nr) => {
 
 	if(load_around_nr === undefined || load_around_nr === null) {
@@ -299,6 +342,37 @@ let loadTilesAtIfMissing = (x_focus_center, y_focus_center, load_around_nr) => {
 	}
 }
 
+let draw_hint_tiles_from_x_y = (x, y) => {
+	console.log("zooming! :)");
+
+	// get center
+	x250 = roundDown250(x);
+	y250 = roundDown250(y);
+
+	//offsets = [-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,-0,1,2,3,4,5,6,7,8,9,10];
+	offsets = [-1,0,1]
+
+	for(x_offset of offsets) {
+
+		x_current = x250 + 250 * x_offset;
+
+		for(y_offset of offsets) {
+
+			y_current = y250 + 250 * y_offset;
+
+			let found = all_hint_tiles.find(hint_tile => {
+				return (hint_tile.x250) === (x_current) && (hint_tile.y250) === (y_current)
+			});
+
+			if(found === undefined) {
+				
+				let hintObject = new HintObject(x_current, y_current);
+				all_hint_tiles.push(hintObject)
+
+			}
+		}
+	}
+}
 
 let countShowing = () => {
 	return all_tiles.reduce(
@@ -337,6 +411,54 @@ let autohide = (viewpoint_x, viewpoint_y) => {
 	}
 }
 
+class HintObject {
+	constructor(x250, y250) {
+		this.x250 = x250;
+		this.y250 = y250;
+
+		//Standard plane
+		this.plane = new THREE.PlaneGeometry(250, 250, 250);
+		this.invisible_material = new THREE.MeshBasicMaterial( {color: 0xc7c7c7, transparent: true, opacity: 0.1, side: THREE.DoubleSide});
+		
+		//Wireframe
+		this.geometry = new THREE.EdgesGeometry(this.plane);
+		this.wireframe_material = new THREE.LineBasicMaterial( { color: 0xc7c7c7 });
+
+		//Create 
+		this.invisible_hint = new THREE.Mesh(this.plane, this.invisible_material);
+		this.hint = new THREE.LineSegments(this.geometry, this.wireframe_material);
+
+		//Set position
+		this.invisible_hint.position.set(x250+125, y250+125, global_offset_z);
+		this.invisible_hint.parent_object = this;
+		this.hint.position.set(x250+125, y250+125, global_offset_z);
+
+		//Add to scene
+		scene.add(this.invisible_hint);
+		scene.add(this.hint);
+	}
+
+	reset_global_offset_z = () => {
+		this.invisible_hint.position.setZ(global_offset_z - 10);
+		this.hint.position.setZ(global_offset_z - 10);
+	}
+
+	remove = () => {
+		scene.remove(this.invisible_hint)
+		scene.remove(this.hint)
+	}
+
+	clicked = () => {
+		console.log("clicked")
+		for(let i = 0; i < 5; i++) {
+			for(let j = 0; j < 5; j++) {
+				loadTilesAtIfMissing(this.x250 + i * 50, this.y250 + j * 50, 0);
+			}
+		}
+		this.remove();
+	}
+}
+
 class TileObject {
 	constructor(x50, y50) {
 		this.x50 = x50;
@@ -346,6 +468,8 @@ class TileObject {
 		this.download_started = false;
 		this.download_finished = false;
 		this.showing_loading_hint = false;
+
+		draw_hint_tiles_from_x_y(x50, y50);
 		
 		all_tiles.push(this);
 		return this;
@@ -446,25 +570,26 @@ let sleep = (ms) => {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-let getpoints = async (init_x, init_y) => {
-	to = 4;
-	for(let x = 0; x < to; x++) {
-		for(let y = 0; y < to; y++) {
-			x50 = init_x + 50 * x;
-			y50 = init_y + 50 * y;
+// Deprecated v0.3
+// let getpoints = async (init_x, init_y) => {
+// 	to = 4;
+// 	for(let x = 0; x < to; x++) {
+// 		for(let y = 0; y < to; y++) {
+// 			x50 = init_x + 50 * x;
+// 			y50 = init_y + 50 * y;
 
-			let obj = {};
-			obj.x = x50 - global_offset_x;
-			obj.y = y50 - global_offset_y;
+// 			let obj = {};
+// 			obj.x = x50 - global_offset_x;
+// 			obj.y = y50 - global_offset_y;
 
-			already_loaded.push(obj)
-			getTile(x50, y50, obj);
-			// xyz = await loadPoints(x50, y50);
-			// colors = await loadColor(x50, y50);
-			// addPointsToScene(scene, colors, xyz, x50, y50, 100)
-		}
-	}
-}
+// 			already_loaded.push(obj)
+// 			getTile(x50, y50, obj);
+// 			// xyz = await loadPoints(x50, y50);
+// 			// colors = await loadColor(x50, y50);
+// 			// addPointsToScene(scene, colors, xyz, x50, y50, 100)
+// 		}
+// 	}
+// }
 
 //TODO:	Error handling
 
@@ -484,8 +609,8 @@ let loadPoints = async (x, y) => {
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/nrw/304000_5645000/color/"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/wnrw/LidarData/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/alllidar/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-     //let request_url = "https://f002.backblazeb2.com/file/lidar-data/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-     let request_url = "https://f003.backblazeb2.com/file/eunrwopenlidardata/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	//let request_url = "https://f002.backblazeb2.com/file/lidar-data/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	let request_url = "https://f003.backblazeb2.com/file/eunrwopenlidardata/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	let xyz = await makeRequest("GET", request_url);
 	xyz = CSVToArray(xyz, ",")
 	return xyz;
@@ -498,9 +623,9 @@ let loadColor = async (x, y) => {
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/nrw/304000_5645000/xyz/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/wnrw/ColorData/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/alllidar/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-     //let request_url = "https://f002.backblazeb2.com/file/lidar-data/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-     let request_url = "https://f003.backblazeb2.com/file/eunrwopenlidardata/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-     let colors = await makeRequest("GET", request_url);
+	//let request_url = "https://f002.backblazeb2.com/file/lidar-data/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	let request_url = "https://f003.backblazeb2.com/file/eunrwopenlidardata/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	let colors = await makeRequest("GET", request_url);
 	colors = CSVToArray(colors, " ")
 	return colors;
 }
@@ -525,7 +650,7 @@ let createTilePoints = (tileObject) => {
 		for (let i in tileObject.xyz) {
 			avg_z = avg_z + Number(tileObject.xyz[i][2]);
 		}
-		global_offset_z = avg_z / tileObject.xyz.length;
+		set_global_offset_z(avg_z / tileObject.xyz.length);
 	}
 
 	//TODO:	Do this with the Javascript Numpy equivalent 
@@ -559,9 +684,15 @@ let createTilePoints = (tileObject) => {
 	//Simpifly this with a 1-Element-Array of Colors
 	geometry.addAttribute('color', new THREE.Float32BufferAttribute(n_colors, 3));
 
-	let material = new THREE.PointsMaterial({ size: 0.85, vertexColors: THREE.VertexColors });
+	let material = new THREE.PointsMaterial({ size: 0.90, vertexColors: THREE.VertexColors });
+	// let material = new THREE.PointsMaterial({ size: 0.85, vertexColors: THREE.VertexColors });
 	points = new THREE.Points(geometry, material);
 	return points;
+}
+
+/* GUI MODIFICATIONS */
+function removeOverlay() {
+	document.body.setAttribute("overlay_on","false");
 }
 
 //Convert a "5a7aff" HEX to a (255,255,255) RGB Value
@@ -693,6 +824,14 @@ let CSVToArray = (strData, strDelimiter) => {
 
 let roundDown50 = (x) => {
 	return Math.floor(x/50)*50;
+}
+
+let roundDown500 = (x) => {
+	return Math.floor(x/500)*500;
+}
+
+let roundDown250 = (x) => {
+	return Math.floor(x/250)*250;
 }
 
 let roundDown1000 = (x) => {

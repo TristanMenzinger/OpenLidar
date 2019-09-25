@@ -11,14 +11,48 @@
 	<script src="js/pako.js"></script>
 	<script src="js/proj4.js"></script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnAMjHEBHvaLLvHJxtwyTxvEKrmqf3S88&libraries=places&callback=initAutocomplete" async defer></script>
-	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Roboto:400,300,700,500,100" rel="stylesheet">
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+
+	<!--
+	<script id="vertex_shader" type="x-shader/x-vertex">
+
+	varying vec3 vNormal;
+	
+	void main() {
+	
+		vNormal = normal;
+	
+		gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+	
+	}
+	
+	</script>
+	
+	<script id="fragment_shader" type="x-shader/x-fragment">
+	
+	uniform sampler2D texture;
+	
+	varying vec3 vNormal;
+	
+	void main() {
+		vec2 uv = normalize( vNormal ).xy * 0.34 + 0.5;
+		vec3 color = texture2D( texture, uv ).rgb;
+		//From where to draw nothing 
+		if ( vNormal.z < - 0.3 ) color = vec3( 0, 0 ,0 ); // back of eye
+		gl_FragColor = vec4( color, 1.0 );
+	}
+	</script>
+	-->
 </head>
 
 <style>
 	body {
 		margin: 0;
 		font-family: 'Roboto';
+	}
+
+	body[overlay_on="false"]  {
 		overflow: hidden;
 	}
 
@@ -43,7 +77,7 @@
 
 		font-size: 1.2em;
 
-		border: 0.1em solid white;
+		border: 0.125em solid white;
 		color: white;
 
 		padding: 0.5em 0.5em;
@@ -69,7 +103,6 @@
 
 		font-size: 0.9em;
 		line-height: 3em;
-
 
 		-ms-transition: all 200ms linear;
 		transition: all 200ms linear;
@@ -125,14 +158,18 @@
 		right: 10px;
 		bottom: 10px;
 		font-size: 12px;
-		color: white;
+	}
+
+	body[overlay_on = "true"] #license {
+		visibility: hidden;
 	}
 
 	#logo {
 		position: absolute;
 		right: 50px;
-		top: 50px;
-		width: 3em;
+		top: 35px;
+		width: 5em;
+		transition: all 500ms ease-in-out;
 	}
 
 	/* Default Class Overrides */
@@ -146,6 +183,7 @@
 		position: absolute;
 		left: 50px;
 		top: 50px;
+		transition: all 500ms ease-in-out;
 	}
 
 	#search_bar {
@@ -154,6 +192,11 @@
 	}
 
 	/*  All the stupid Google Autocomplete Styling  */
+
+	::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+		color: lightgrey;
+		opacity: 1; /* Firefox */
+	}
 
 	.pac-container, .pac-item {
 		background-color: black;
@@ -198,11 +241,101 @@
 		color: black;
 	}
 
+	body[overlay_on = "true"] #landing_overlay {
+		visibility: visible;
+	}
+	
+	#landing_overlay {
+		visibility: hidden;
+		position: absolute;
+		width: 100%;
+		min-height: 100%;
+		text-align: center;
+		background-color: black;
+	}
+
+	body[overlay_on = "true"] #logo {
+		left: calc(50% - 7.5em);
+		top: calc(30% - 10em);
+		width: 15em;
+	}
+
+	body[overlay_on = "true"] #search_container {
+		left: calc(50% - 12.5em);
+		top: 40%;
+	}
+	body[overlay_on = "true"] #autocomplete_input {
+		width: 25em;
+	}
+	body[overlay_on = "true"] #invalid_location {
+		width: 30em !important;
+	}
+
+	#container_landing {
+		text-align: center;
+		margin-top: 45vh;
+	}
+
+	.container_locations {
+		display: inline-block;
+		color: white;
+	}
+
+	body[overlay_on = "true"] #infobox  {
+		display: inline-block;
+		color: white;
+		width: 68%;
+		max-width: 600px;
+		font-size: 1em;
+		border: 1px solid rgb(150, 150, 150);
+		padding: 20px;
+	}
+
+	h4 {
+		font-weight: 600;
+		font-size: 0.9em;
+		text-align: left;
+		margin-left: 20%;
+	}
+
+	.locations {
+		display: inline-block;
+		text-align: left;
+		width: 50%;
+		overflow: hidden;
+	}
+
+	.location_city {
+		font-size: 0.8em;
+		display: inline-block;
+		padding: 5px;
+		margin: 2.5px;
+		width: 8em;
+		overflow: hidden;
+		text-decoration: underline;
+		color: white;
+		cursor: pointer;
+	}
+
 	/********************/
 
 	@media only screen and (max-device-width: 480px) {
 		body {
 			font-size: 3em;
+		}
+
+		#logo {
+			position: absolute;
+			right: 10px;
+			top: 0.8em;
+			width: 3.5em;
+			transition: all 500ms ease-in-out;
+		}
+
+		#infobox {
+			font-size: 0.75em !important;
+			width: calc( 100% - 150px) !important;
+			max-width: 100% !important;
 		}
 
 		#autocomplete_input {
@@ -225,26 +358,97 @@
 			width: 16.8em;
 		}
 
+		/* Search bar adaption for mobile */
 		.pac-icon { 
 			height: 0em;
 		}
-
 		.pac-item {
 			height: 3.5em;
 			line-height: 3.5em;
 			font-size: 0.7em;
 			color: gray;
 		}
-
 		.pac-item span {
 			font-size: 1.25em;
 		}
+
+		/* Overlay adaption for mobile */
+		body[overlay_on = "true"] #logo {
+			left: calc(50% - 5em);
+			top: calc(30% - 7em);
+			width: 10em;
+		}
+
+		body[overlay_on = "true"] #search_container {
+			left: 5%;
+			width: 90%;
+			top: 40%;
+		}
+		body[overlay_on = "true"] #autocomplete_input {
+			width: 17em;
+		}
+		body[overlay_on = "true"] #invalid_location {
+			width: 20.5em !important;
+		}
+
+		a {
+			color: inherit;
+		}
+
+		h4 {
+			margin-left: 50px;
+		}
+		.locations {
+			width: 100%;
+			text-align: center;
+		}
 	}
 
+	.placeholder {
+		height: 100px;
+	}
+	.placeholder.double {
+		height: 200px;
+	}
 </style>
 
-<body onload="start()">
+<body onload="start()" overlay_on="true">
+
 	<canvas></canvas>
+
+	<div id="landing_overlay">
+		<div id="container_landing">
+			<div class="placeholder"></div>
+			<div id="infobox">
+				I've mapped all aerial pictures of NRW to the LIDAR points made available by the OpenNRW initiative.
+				In total you can browse ~39000 square kilometers equaling about ~6TB of LIDAR data and ~2TB of Images.
+			</div>
+			<div class="placeholder"></div>
+			<div class="container_locations">
+				<h4>Places:</h4>
+				<div class="locations">
+						<div class="location_city">Drachenfelsburg</div>
+						<div class="location_city">Naturpark XYZ</div>
+						<div class="location_city">Kohlegrube XYZ</div>
+						<div class="location_city">Kohlegrube XYZ</div>
+						<div class="location_city">Kohlegrube XYZ</div>
+					</div>
+				<h4>Cities:</h4>
+				<div class="locations">
+					<div class="location_city">Köln</div>
+					<div class="location_city">Düsseldorf</div>
+					<div class="location_city">Dortmund</div>
+					<div class="location_city">Essen</div>
+					<div class="location_city">Duisburg</div>
+					<div class="location_city">Bochum</div>
+					<div class="location_city">Wuppertal</div>
+					<div class="location_city">Bielefeld</div>
+					
+				</div>
+			</div>
+			<div class="placeholder double"></div>
+		</div>
+	</div>
 
 	<div id="search_container">
 		<div id="search_div"><i class="fas fa-search"></i></div>
@@ -253,9 +457,10 @@
 			<div id="invalid_location" class="hide_by_height">Nicht in NRW</div>
 		</div>
 	</div>
+	
 	<img id="logo" src="Images/Logo.png"></img>
-	<div id="license">Bereitsteller: <a href="https://open.nrw">Land NRW (2019)</a>
-		 // Daten: <a href="https://www.opengeodata.nrw.de/produkte/geobasis/dom/dom1l/index.html">Opengeodata.NRW</a> 
-		 // Lizenz: <a href="http://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a></div>
+	<div id="license" class="">Provider: <a href="https://open.nrw">Land NRW (2019)</a>
+		 // Data: <a href="https://www.opengeodata.nrw.de/produkte/geobasis/dom/dom1l/index.html">Opengeodata.NRW</a> 
+		 // License: <a href="http://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a></div>
 </body>
 </html>
