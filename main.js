@@ -54,15 +54,15 @@ let WGS2ll = (x, y) => {
 	return latlng_coords;
 }
 
-let showWrongCountyNote = () => {
+function showWrongCountyNote() {
 	document.getElementById("invalid_location").classList.remove("hide_by_height");
 }
 
-let hideWrongCountyNote = () => {
+function hideWrongCountyNote() {
 	document.getElementById("invalid_location").classList.add("hide_by_height");
 }
 
-initAutocomplete = () => {
+function initAutocomplete() {
 
 	let input = document.getElementById('autocomplete_input');
 	let autocomplete = new google.maps.places.Autocomplete(input);
@@ -87,14 +87,16 @@ initAutocomplete = () => {
 			showWrongCountyNote();
 		}else {
 			hideWrongCountyNote();
-			wgs_coords = ll2WGS(place.geometry.location.lat(), place.geometry.location.lng());
-			zoomToNewPlace(wgs_coords[0], wgs_coords[1])
+               wgs_coords = ll2WGS(place.geometry.location.lat(), place.geometry.location.lng());
+               setTimeout(function(){ 
+                    zoomToNewPlace(wgs_coords[0], wgs_coords[1])
+                    first_search_done = true;
+                }, 500);
 			if(first_search_done === false) {
                     removeOverlay();
                     focus_to_touch_controls();
 				console.log("removed overlay");
 			}
-			first_search_done = true;
 		}
 	});
 }
@@ -111,7 +113,7 @@ let moveCamera = (x, y) => {
 	controls.update();
 }
 
-let cameraToNormalPos = () => {
+function cameraToNormalPos() {
 
 }
 
@@ -124,13 +126,26 @@ let zoomToNewPlace = (x, y) => {
 	let distance = euclidianDistance([x, y], [controls.target.x, controls.target.y])
 	console.log("eucl. distance to new is:", distance)
 	if(distance > 400) {
-		//clean all before loaded ones from scene at least
+          //clean all before loaded ones from scene at least
+          all_tiles.map(tile => {
+               tile.remove();
+          });
+          all_tiles = [];
+
+          //clean all hint tiles
+          all_hint_tiles.map(hint_tile => {
+               hint_tile.remove();
+          })
+          all_hint_tiles = [];
+
+          //reset global offset to nothing
+          set_global_offset_z(0);
 	}
 
 	moveCamera(x, y)
 }
 
-let initTransferControlsListener = () => {
+function initTransferControlsListener() {
 
 	autocomplete_input = document.getElementById("autocomplete_input");
 	autocomplete_input.addEventListener("mouseover", function() {
@@ -158,7 +173,7 @@ let initTransferControlsListener = () => {
 }
 
 // new, works?
-let focus_to_touch_controls = () => {
+function focus_to_touch_controls() {
      autocomplete_input = document.getElementById("autocomplete_input");
 	controls.enabled = true;
 	autocomplete_input.blur();
@@ -258,7 +273,7 @@ function onclick(event) {
 	}
 }
 
-let init_worker = () => {
+function init_worker() {
 	setInterval(() => { 
 		if(first_search_done === true) {
 			// console.log("worker checked")
@@ -278,7 +293,7 @@ let init_worker = () => {
 	}, 500);
 }
 
-let redraw = () => {
+function redraw() {
 
 	renderer.render(scene, camera);
 	requestAnimationFrame(redraw);
@@ -380,7 +395,7 @@ let draw_hint_tiles_from_x_y = (x, y) => {
 	}
 }
 
-let countShowing = () => {
+function countShowing() {
 	return all_tiles.reduce(
 		function(total, tileObject){
 			return tileObject.isShowing() ? total+1 : total
@@ -444,17 +459,17 @@ class HintObject {
 		scene.add(this.hint);
 	}
 
-	reset_global_offset_z = () => {
+	reset_global_offset_z() {
 		this.invisible_hint.position.setZ(global_offset_z - 10);
 		this.hint.position.setZ(global_offset_z - 10);
 	}
 
-	remove = () => {
+	remove() {
 		scene.remove(this.invisible_hint)
 		scene.remove(this.hint)
 	}
 
-	clicked = () => {
+	clicked() {
 		for(let i = 0; i < 5; i++) {
 			for(let j = 0; j < 5; j++) {
 				loadTilesAtIfMissing(this.x250 + i * 50, this.y250 + j * 50, 0);
@@ -480,34 +495,34 @@ class TileObject {
 		return this;
 	}
 
-	downloadStarted = () => {
+	downloadStarted() {
 		this.download_started = true;
 		CONCURRENT_HTTP_REQUEST_COUNT++;
 	}
 
-	downloadEnded = () => {
+	downloadEnded() {
 		this.download_finished = true;
 		CONCURRENT_HTTP_REQUEST_COUNT--;
 	}
 
-	isShowing = () => {
+	isShowing() {
 		return this.showing;
 	}
 
-	isDownloadStarted = () => {
+	isDownloadStarted() {
 		return this.download_started;
 	}
 
-	isDownloadFinished = () => {
+	isDownloadFinished() {
 		return this.download_finished;
 	}
 
-	removeRawData = () => {
+	removeRawData() {
 		delete this.xyz;
 		delete this.colors;
 	}
 
-	downloadData = async () => {		
+	async downloadData() {		
 		this.downloadStarted();
 
 		// while(CONCURRENT_HTTP_REQUEST_COUNT > 16) {
@@ -522,7 +537,7 @@ class TileObject {
 		return this;
 	}
 
-	showLoadingHint = () => {
+	showLoadingHint() {
 		if(this.showing_loading_hint == false) {
 			let bound_center_x = this.x50 + 25;
 			let bound_center_y = this.y50 + 25;
@@ -535,14 +550,14 @@ class TileObject {
 		}
 	}
 
-	removeLoadingHint = () => {
+	removeLoadingHint() {
 		if(this.showing_loading_hint) {
 			this.showing_loading_hint = false;
 			scene.remove(this.loading_hint_plane);
 		}
 	}
 
-	show = () => {
+	show() {
 		if(!this.isShowing()) {
 			this.showing = true;
 			if(this.threejs_points === undefined || this.threejs_points === null) {
@@ -553,14 +568,14 @@ class TileObject {
 		}
 	}
 
-	hide = () => {
+	remove() {
 		if(this.isShowing()) {
 			this.showing = false;
 			scene.remove(this.threejs_points); 
 		}
 	}
 
-	downloadAndShow = async () => {
+	async downloadAndShow() {
 		//Only if not yet started to download or finished shall we download the data again
 		if(!this.isDownloadStarted() && !this.isDownloadFinished()) {
 			this.showLoadingHint()

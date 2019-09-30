@@ -306,7 +306,6 @@
 		display: inline-block;
 		text-align: left;
 		width: 50%;
-		overflow: hidden;
 	}
 
 	.location_city {
@@ -315,7 +314,6 @@
 		padding: 5px;
 		margin: 2.5px;
 		width: 8em;
-		overflow: hidden;
 		text-decoration: underline;
 		color: white;
 		cursor: pointer;
@@ -364,9 +362,24 @@
 		display: block;
 	}
 
+
+	@media screen and (max-width: 1400px) {
+		#figures_container {
+			width: 55%;
+		}
+
+		.location_city {
+			font-size: 1.5em;
+		}
+
+		h4 {
+			font-size: 1.5em;
+		}
+	}
+
 		/********************/
 
-		@media only screen and (max-device-width: 480px) {
+	@media only screen and (max-device-width: 480px) {
 		body {
 			font-size: 3em;
 		}
@@ -391,10 +404,12 @@
 
 		#autocomplete_input:hover {
 			width: 14em;
+			background-color: red;
 		}
 
 		#autocomplete_input:focus {
 			width: 14em;
+			background-color: red;
 		}
 
 		#autocomplete_input:not(:hover):not(:focus) ~ #invalid_location{
@@ -540,7 +555,7 @@
 		<div id="search_div"><i class="fas fa-search"></i></div>
 		<div id="search_bar">
 			<input id="autocomplete_input"></input>
-			<div id="invalid_location" class="hide_by_height">Nicht in NRW</div>
+			<div id="invalid_location" class="hide_by_height">Not in NRW</div>
 		</div>
 	</div>
 	
