@@ -106,6 +106,8 @@
 
 		-ms-transition: all 200ms linear;
 		transition: all 200ms linear;
+
+		border-radius: 0;
 	}
 
 	#autocomplete_input:hover {
@@ -155,6 +157,7 @@
 
 	#license {
 		position: absolute;
+		color: white;
 		right: 10px;
 		bottom: 10px;
 		font-size: 12px;
@@ -410,6 +413,38 @@
 	.placeholder.double {
 		height: 200px;
 	}
+
+	/* ---- */
+
+	#figures_container {
+		display: inline-block;
+		text-align: center;
+		width: 80%;
+	}
+
+	.keyfigure {
+		min-width: 230px;
+		text-align: center;
+		color: white;
+		display: inline-block;
+		margin: 10px;
+	}
+	.keyfigure .number {
+		font-size: 30pt;
+		display: inline-block;
+	}
+	.keyfigure .unit {
+		margin-top: 5px;
+		font-size: 12pt;
+		display: inline-block;
+		vertical-align: top;
+	}
+	.keyfigure .text {
+		margin-top: -7px;
+		font-size: 10pt;
+		display: block;
+	}
+
 </style>
 
 <body onload="start()" overlay_on="true">
@@ -419,6 +454,34 @@
 	<div id="landing_overlay">
 		<div id="container_landing">
 			<div class="placeholder"></div>
+			
+			<div id="figures_container">
+				<div class="keyfigure">
+					<div class="number">39000</div>
+					<div class="unit">sq. km^2</div>
+					<div class="text">covered</div>
+				</div>
+
+				<div class="keyfigure">
+					<div class="number">200</div>
+					<div class="unit">Billion</div>
+					<div class="text">Points in total</div>
+				</div>
+
+				<div class="keyfigure">
+					<div class="number">6</div>
+					<div class="unit">TBs</div>
+					<div class="text">of LIDAR data</div>
+				</div>
+
+				<div class="keyfigure">
+					<div class="number">2</div>
+					<div class="unit">TBs</div>
+					<div class="text">of images</div>
+				</div>
+			</div>
+
+			<br>
 			<div id="infobox">
 				I've mapped all aerial pictures of NRW to the LIDAR points made available by the OpenNRW initiative.
 				In total you can browse ~39000 square kilometers equaling about ~6TB of LIDAR data and ~2TB of Images.

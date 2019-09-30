@@ -67,7 +67,7 @@ initAutocomplete = () => {
 	let input = document.getElementById('autocomplete_input');
 	let autocomplete = new google.maps.places.Autocomplete(input);
 	autocomplete.setFields(['address_components', 'geometry','name']);
-	autocomplete.setTypes(['geocode'])
+	//autocomplete.setTypes(['geocode', 'regions'])
 	console.log(autocomplete)
 
 	let infowindow = new google.maps.InfoWindow();
@@ -90,7 +90,8 @@ initAutocomplete = () => {
 			wgs_coords = ll2WGS(place.geometry.location.lat(), place.geometry.location.lng());
 			zoomToNewPlace(wgs_coords[0], wgs_coords[1])
 			if(first_search_done === false) {
-				removeOverlay();
+                    removeOverlay();
+                    focus_to_touch_controls();
 				console.log("removed overlay");
 			}
 			first_search_done = true;
@@ -154,6 +155,13 @@ let initTransferControlsListener = () => {
 		controls.enabled = true;
 	});
 	*/
+}
+
+// new, works?
+let focus_to_touch_controls = () => {
+     autocomplete_input = document.getElementById("autocomplete_input");
+	controls.enabled = true;
+	autocomplete_input.blur();
 }
 
 let start = async () => {
@@ -239,7 +247,7 @@ function onclick(event) {
 	raycaster.setFromCamera( mouse.clone(), camera ); 
 
 	let all_hints = all_hint_tiles.map(x => x.invisible_hint);
-	console.log(all_hints)
+	// console.log(all_hints)
 	var intersects = raycaster.intersectObjects(all_hints); 
 
 	// console.log("intersects length", intersects.length)
@@ -343,8 +351,6 @@ let loadTilesAtIfMissing = (x_focus_center, y_focus_center, load_around_nr) => {
 }
 
 let draw_hint_tiles_from_x_y = (x, y) => {
-	console.log("zooming! :)");
-
 	// get center
 	x250 = roundDown250(x);
 	y250 = roundDown250(y);
@@ -429,9 +435,9 @@ class HintObject {
 		this.hint = new THREE.LineSegments(this.geometry, this.wireframe_material);
 
 		//Set position
-		this.invisible_hint.position.set(x250+125, y250+125, global_offset_z);
+		this.invisible_hint.position.set(x250+125, y250+125, global_offset_z - 10);
 		this.invisible_hint.parent_object = this;
-		this.hint.position.set(x250+125, y250+125, global_offset_z);
+		this.hint.position.set(x250+125, y250+125, global_offset_z - 10);
 
 		//Add to scene
 		scene.add(this.invisible_hint);
@@ -449,7 +455,6 @@ class HintObject {
 	}
 
 	clicked = () => {
-		console.log("clicked")
 		for(let i = 0; i < 5; i++) {
 			for(let j = 0; j < 5; j++) {
 				loadTilesAtIfMissing(this.x250 + i * 50, this.y250 + j * 50, 0);
@@ -646,6 +651,7 @@ let createTilePoints = (tileObject) => {
 	let color = new THREE.Color();
 
 	if(global_offset_z === 0) {
+          global_offset_z = 1; //Just so its immediately set.
 		let avg_z = 0;
 		for (let i in tileObject.xyz) {
 			avg_z = avg_z + Number(tileObject.xyz[i][2]);
