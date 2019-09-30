@@ -292,6 +292,7 @@
 		font-size: 1em;
 		border: 1px solid rgb(150, 150, 150);
 		padding: 20px;
+		display: none;
 	}
 
 	h4 {
@@ -320,9 +321,52 @@
 		cursor: pointer;
 	}
 
-	/********************/
+	.placeholder {
+		height: 100px;
+	}
+	.placeholder.double {
+		height: 200px;
+	}
+	.placeholder.half {
+		height: 50px;
+	}
 
-	@media only screen and (max-device-width: 480px) {
+	/* ---- */
+
+	#figures_container {
+		display: inline-block;
+		text-align: center;
+		width: 80%;
+	}
+
+	.keyfigure {
+		width: 250px;
+		text-align: center;
+		color: white;
+		display: inline-block;
+		margin: 10px;
+	}
+	.keyfigure .number {
+		font-size: 2em;
+		display: inline-block;
+		text-align: right;
+	}
+	.keyfigure .unit {
+		margin-top: 5px;
+		font-size: 1em;
+		display: inline-block;
+		vertical-align: top;
+		text-align: left;
+	}
+	.keyfigure .text {
+		margin-top: -7px;
+		font-size: 0.7em;
+		display: block;
+	}
+
+		/********************/
+
+		@media only screen and (max-device-width: 480px) {
 		body {
 			font-size: 3em;
 		}
@@ -405,44 +449,27 @@
 			width: 100%;
 			text-align: center;
 		}
-	}
 
-	.placeholder {
-		height: 100px;
-	}
-	.placeholder.double {
-		height: 200px;
-	}
-
-	/* ---- */
-
-	#figures_container {
-		display: inline-block;
-		text-align: center;
-		width: 80%;
-	}
-
-	.keyfigure {
-		min-width: 230px;
-		text-align: center;
-		color: white;
-		display: inline-block;
-		margin: 10px;
-	}
-	.keyfigure .number {
-		font-size: 30pt;
-		display: inline-block;
-	}
-	.keyfigure .unit {
-		margin-top: 5px;
-		font-size: 12pt;
-		display: inline-block;
-		vertical-align: top;
-	}
-	.keyfigure .text {
-		margin-top: -7px;
-		font-size: 10pt;
-		display: block;
+		#figures_container {
+			width: 90%;
+		}
+		.keyfigure {
+			width: 40%;
+			margin-bottom: 40px;
+		}
+		.keyfigure .number {
+			width: 170px;
+			font-size: 1.2em;
+			font-weight: 500;
+		}
+		.keyfigure .unit {
+			margin-top: 0.5em;
+			width: 5em;
+			font-size: 0.6em;
+		}
+		#figures_placeholder {
+			height: 150px;
+		}
 	}
 
 </style>
@@ -453,8 +480,7 @@
 
 	<div id="landing_overlay">
 		<div id="container_landing">
-			<div class="placeholder"></div>
-			
+			<div class="placeholder half" id="figures_placeholder"></div>
 			<div id="figures_container">
 				<div class="keyfigure">
 					<div class="number">39000</div>
@@ -469,14 +495,14 @@
 				</div>
 
 				<div class="keyfigure">
-					<div class="number">6</div>
-					<div class="unit">TBs</div>
+					<div class="number">6000</div>
+					<div class="unit">GBs</div>
 					<div class="text">of LIDAR data</div>
 				</div>
 
 				<div class="keyfigure">
-					<div class="number">2</div>
-					<div class="unit">TBs</div>
+					<div class="number">2000</div>
+					<div class="unit">GBs</div>
 					<div class="text">of images</div>
 				</div>
 			</div>
@@ -486,15 +512,12 @@
 				I've mapped all aerial pictures of NRW to the LIDAR points made available by the OpenNRW initiative.
 				In total you can browse ~39000 square kilometers equaling about ~6TB of LIDAR data and ~2TB of Images.
 			</div>
-			<div class="placeholder"></div>
+			<div class="placeholder half"></div>
 			<div class="container_locations">
 				<h4>Places:</h4>
 				<div class="locations">
 						<div class="location_city">Drachenfelsburg</div>
 						<div class="location_city">Naturpark XYZ</div>
-						<div class="location_city">Kohlegrube XYZ</div>
-						<div class="location_city">Kohlegrube XYZ</div>
-						<div class="location_city">Kohlegrube XYZ</div>
 					</div>
 				<h4>Cities:</h4>
 				<div class="locations">
