@@ -322,6 +322,20 @@
 			margin-bottom: 2em;
 		}
 
+		#language_switcher {
+			position: absolute;
+			width: 4em;
+			height: 3em;
+			right: 1em;
+			top: 1em;
+			padding: 0.5em;
+			cursor: pointer;
+			text-align: right;
+		}
+		#language_flag {
+			width: 2em;
+		}
+
 		/* Screen size */
 		@media screen and (min-width: 480px) {
 			body[overlay="0"] #searchbar {
@@ -382,6 +396,9 @@
 		</div>
 
 		<div id="overlay_background">
+			<div id="language_switcher" onclick="location.href='../en/index.html'">
+				<img id="language_flag" src="../images/en.png"></img>
+			</div>
 			<div id="container_logo">
 				<img id="logo" src="../images/Logo.png"></img>
 			</div>

@@ -5,6 +5,9 @@ places=Places
 cities=Städte
 searchbar_tooltip=Suche nach Ort
 
+other_language=de
+other_language_url=../de/index.html
+
 //Flag
 not_in_nrw=Not in NRW
 
@@ -21,7 +24,7 @@ drag_to_rotate=Drag to rotate around
 bernrath=Palace Bernrath
 zeche=Zeche Zollverein
 airport=Cologne Airport
-monument=Hermmansdenkmal
+monument=Monument to Hermman
 dragoncastle=Castle Drachenfels
 palace_northchurch=Palace Nordkirchen
 arch_park=Archäologischer Park Xanten

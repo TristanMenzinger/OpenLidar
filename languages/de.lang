@@ -5,6 +5,9 @@ places=Orte
 cities=Städte
 searchbar_tooltip=Suche
 
+other_language=en
+other_language_url=../en/index.html
+
 //FLag
 not_in_nrw=Nicht in NRW
 
