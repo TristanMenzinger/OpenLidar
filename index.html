@@ -1,573 +1,468 @@
 <html>
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="user-scalable=no" />
+	<head>
+		<meta charset="UTF-8">
 
-	<title>NRW LiDAR</title>
-	
-	<script src="main.js"></script>
-	<script src="js/three.js"></script>
-	<script src="js/OrbitControls.js"></script>
-	<script src="js/pako.js"></script>
-	<script src="js/proj4.js"></script>
-	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnAMjHEBHvaLLvHJxtwyTxvEKrmqf3S88&libraries=places&callback=initAutocomplete" async defer></script>
-	<link href="https://fonts.googleapis.com/css?family=Roboto:400,300,700,500,100" rel="stylesheet">
-	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+		<script src="main.js"></script>
+		<script src="js/three.js"></script>
+		<script src="js/OrbitControls.js"></script>
+		<script src="js/pako.js"></script>
+		<script src="js/proj4.js"></script>
 
-	<!--
-	<script id="vertex_shader" type="x-shader/x-vertex">
+		<!-- Autocomplete -->
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnAMjHEBHvaLLvHJxtwyTxvEKrmqf3S88&libraries=places&callback=initAutocomplete" async></script>
+		<!-- <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnAMjHEBHvaLLvHJxtwyTxvEKrmqf3S88&libraries=places&callback=initAutocomplete" async defer></script> -->
 
-	varying vec3 vNormal;
-	
-	void main() {
-	
-		vNormal = normal;
-	
-		gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-	
-	}
-	
-	</script>
-	
-	<script id="fragment_shader" type="x-shader/x-fragment">
-	
-	uniform sampler2D texture;
-	
-	varying vec3 vNormal;
-	
-	void main() {
-		vec2 uv = normalize( vNormal ).xy * 0.34 + 0.5;
-		vec3 color = texture2D( texture, uv ).rgb;
-		//From where to draw nothing 
-		if ( vNormal.z < - 0.3 ) color = vec3( 0, 0 ,0 ); // back of eye
-		gl_FragColor = vec4( color, 1.0 );
-	}
-	</script>
-	-->
-</head>
-
-<style>
-	body {
-		margin: 0;
-		font-family: 'Roboto';
-	}
-
-	body[overlay_on="false"]  {
-		overflow: hidden;
-	}
-
-	canvas {
-		width: 100vw;
-		height: 100vh;
-		display: block;
-		position: fixed;
-		top: 0;
-		left: 0;
-	}
-
-	#search_div {
-
-		display: inline-block;
-
-		/* This stops the border from adding padding*/
-		box-sizing: border-box;
-		-moz-box-sizing: border-box;
-		-webkit-box-sizing: border-box;
-
-		width: 2.25em;
-		height: 2.25em;
-
-		font-size: 1.2em;
-
-		border: 0.125em solid white;
-		color: white;
-
-		padding: 0.5em 0.5em;
-
-		display: inline-block;
-		vertical-align: top;
-	}
-
-	#autocomplete_input {
-		width: 12.5em;
-		height: 3em;
-
-		padding: 0 1em 0 1em;
-		text-overflow: ellipsis;
-
-		background-color: transparent;
-		display: inline-block;
-
-		border: 0.15em solid white;
-		color: white;
+		<!-- Roboto Font -->
+		<link href="https://fonts.googleapis.com/css?family=Roboto:400,300,700,500,100" rel="stylesheet">
 		
-		caret-color: white;
+		<!-- Fontawesome -->
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
 
-		font-size: 0.9em;
-		line-height: 3em;
+		<!--Important, neccessary for scaling in safari!-->
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 
-		-ms-transition: all 200ms linear;
-		transition: all 200ms linear;
+		<!-- Google maps style override  -->
+		<link rel="stylesheet" href="maps_override.css">
 
-		border-radius: 0;
-	}
+		<!-- Github Button -->
+		<script async defer src="https://buttons.github.io/buttons.js"></script>
+	</head>
 
-	#autocomplete_input:hover {
-		width: 25em;
-		background-color: black;
-		-ms-transition: all 200ms linear;
-		transition: all 200ms linear;
-	}
-
-	#autocomplete_input:focus {
-		width: 25em;
-		background-color: black;
-		-ms-transition: width 200ms linear;
-		transition: width 200ms linear;
-	}
-
-	#autocomplete_input:not(:hover):not(:focus) ~ #invalid_location{
-		width: 15em;
-	}
-
-	#invalid_location {
-		overflow:hidden;
-		width: 30em;
-		background-color: red;
-		color: white;
-
-		height: 1.75em;
-		line-height: 1.5em;
-		font-size: 0.75em;
-		font-weight: bold;
-		display: block;
-
-		padding-left: 1em;
-
-		/* This stops the border from adding padding*/
-		box-sizing: border-box;
-		-moz-box-sizing: border-box;
-		-webkit-box-sizing: border-box;
-
-		-ms-transition: all 200ms linear;
-		transition: all 200ms linear;
-	}
-
-	#invalid_location.hide_by_height {
-		height: 0em;
-	}
-
-	#license {
-		position: absolute;
-		color: white;
-		right: 10px;
-		bottom: 10px;
-		font-size: 12px;
-	}
-
-	body[overlay_on = "true"] #license {
-		visibility: hidden;
-	}
-
-	#logo {
-		position: absolute;
-		right: 50px;
-		top: 35px;
-		width: 5em;
-		transition: all 500ms ease-in-out;
-	}
-
-	/* Default Class Overrides */
-	a {
-		color: white;
-	}
-
-	/***************/
-
-	#search_container {
-		position: absolute;
-		left: 50px;
-		top: 50px;
-		transition: all 500ms ease-in-out;
-	}
-
-	#search_bar {
-		display: inline-block;
-		/* margin-left: -0.4em; */
-	}
-
-	/*  All the stupid Google Autocomplete Styling  */
-
-	::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
-		color: lightgrey;
-		opacity: 1; /* Firefox */
-	}
-
-	.pac-container, .pac-item {
-		background-color: black;
-		color: white;
-		border: none;
-		border-left: 0.3em solid #ffffff00;
-	}
-
-	.pac-item {
-		cursor: pointer;
-	}
-
-	.pac-item:hover {
-		background-color: black;
-		border: none;
-		border-left: 0.3em solid white;
-	}
-
-	.pac-item-selected,
-	.pac-item-selected:hover {
-		border: none;
-		background-color: black;
-	}
-
-	.pac-item-query {
-		color: white;
-	}
-
-	.pac-container:after {
-		white-space: pre;
-		content: "Powered by                   ";
-		font-size: 10px;
-		line-height: 17px;
-		color: gray !important;
-	}
-
-	.pac-icon, .pac-icon-selected {
-		color: white;
-	}
-
-	.pac-icon:hover {
-		color: black;
-	}
-
-	body[overlay_on = "true"] #landing_overlay {
-		visibility: visible;
-	}
-	
-	#landing_overlay {
-		visibility: hidden;
-		position: absolute;
-		width: 100%;
-		min-height: 100%;
-		text-align: center;
-		background-color: black;
-	}
-
-	body[overlay_on = "true"] #logo {
-		left: calc(50% - 7.5em);
-		top: calc(30% - 10em);
-		width: 15em;
-	}
-
-	body[overlay_on = "true"] #search_container {
-		top: 40%;
-	}
-	body[overlay_on = "true"] #autocomplete_input {
-		width: 25em;
-	}
-	body[overlay_on = "true"] #invalid_location {
-		width: 30em !important;
-	}
-
-	#container_landing {
-		text-align: center;
-		margin-top: 45vh;
-	}
-
-	.container_locations {
-		display: inline-block;
-		color: white;
-	}
-
-	body[overlay_on = "true"] #infobox  {
-		display: inline-block;
-		color: white;
-		width: 68%;
-		max-width: 600px;
-		font-size: 1em;
-		border: 1px solid rgb(150, 150, 150);
-		padding: 20px;
-		display: none;
-	}
-
-	h4 {
-		font-weight: 600;
-		font-size: 0.9em;
-		text-align: left;
-		margin-left: 20%;
-	}
-
-	.locations {
-		display: inline-block;
-		text-align: left;
-		width: 50%;
-	}
-
-	.location_city {
-		font-size: 0.8em;
-		display: inline-block;
-		padding: 5px;
-		margin: 2.5px;
-		width: 8em;
-		text-decoration: underline;
-		color: white;
-		cursor: pointer;
-	}
-
-	.placeholder {
-		height: 100px;
-	}
-	.placeholder.double {
-		height: 200px;
-	}
-	.placeholder.half {
-		height: 50px;
-	}
-
-	/* ---- */
-
-	#figures_container {
-		display: inline-block;
-		text-align: center;
-		width: 80%;
-	}
-
-	.keyfigure {
-		width: 250px;
-		text-align: center;
-		color: white;
-		display: inline-block;
-		margin: 10px;
-	}
-	.keyfigure .number {
-		font-size: 2em;
-		display: inline-block;
-		text-align: right;
-	}
-	.keyfigure .unit {
-		margin-top: 5px;
-		font-size: 1em;
-		display: inline-block;
-		vertical-align: top;
-		text-align: left;
-	}
-	.keyfigure .text {
-		margin-top: -7px;
-		font-size: 0.7em;
-		display: block;
-	}
-
-	@media screen and (max-width: 480px) {
-		body[overlay_on = "true"] #autocomplete_input {
-			background-color: red;
-			width: calc(100vw - 60px - 43px - 110px);
+	<style>
+		* {
+			box-sizing: border-box;
+			-moz-box-sizing: border-box;
+			-webkit-box-sizing: border-box;
+			transition: all 200ms linear;
 		}
-		body[overlay_on = "true"] #search_container {
-			background-color: blue;
-			width: 100%;
+
+		body {
+			margin: 0;
+			background-color: black;
+			color: white;
+			font-family: 'Roboto';
+		}
+
+		canvas {
+			width: 100vw;
+			height: 100vh;
+			display: block;
+			position: fixed;
+			top: 0;
 			left: 0;
-			padding: 30px;
-		}
-	}
+		}	
 
-	/*
-	@media screen and (max-width: 1400px) {
-		#figures_container {
-			width: 55%;
-		}
 
-		.location_city {
-			font-size: 1.5em;
+		/* Overlay */
+		#overlay_background {
+			width: 100%;
+			min-height: 100%;
+			background-color: black;
 		}
 
-		h4 {
-			font-size: 1.5em;
+		/* Logo */
+		#container_logo {
+			width: 100%;
+			text-align: center;
+			padding-top: 50px;
+			/* padding-bottom: 50px; */
 		}
-	}
-
-
-	@media only screen and (max-width: 480px) {
 		#logo {
-			position: absolute;
-			right: 10px;
-			top: 0.8em;
-			width: 3.5em;
-			transition: all 500ms ease-in-out;
+			width: 200px;
+			z-index: 2;
 		}
 
-		#infobox {
-			font-size: 0.75em !important;
-			width: calc( 100% - 150px) !important;
-			max-width: 100% !important;
-		}
-
-		#autocomplete_input {
-			width: 14em;
-		}
-
-		#autocomplete_input:hover {
-			width: 14em;
-		}
-
-		#autocomplete_input:focus {
-			width: 14em;
-		}
-
-		#autocomplete_input:not(:hover):not(:focus) ~ #invalid_location{
-			width: 16.8em;
-		}
-
-		#invalid_location {
-			width: 16.8em;
-		}
-
-		.pac-icon { 
-			height: 0em;
-		}
-		.pac-item {
-			height: 3.5em;
-			line-height: 3.5em;
-			font-size: 0.7em;
-			color: gray;
-		}
-		.pac-item span {
-			font-size: 1.25em;
-		}
-
-		body[overlay_on = "true"] #logo {
-			left: calc(50% - 5em);
-			top: calc(30% - 7em);
-			width: 10em;
-		}
-
-		body[overlay_on = "true"] #search_container {
+		/* Searchbar */
+		#container_searchbar {
+			padding: 2em;
 			width: 100%;
-			top: 40%;
+			text-align: center;
 		}
-		body[overlay_on = "true"] #autocomplete_input {
+		#searchbar {
+			display: inline-block;
 			width: 100%;
+			max-width: 30em;
+			z-index: 2;
+		}
+		#searchbar_entry_field {
+
+			/* Override stupid default styling */
+			background-color: transparent;
+			outline: 0;
+			background-color: black;
+
+			display: inline-block;
+			font-size: 16px;
+			/* font-size: 12pt; */
+			height: 3em;
+			
+			width: calc( 100%  - 3em - 6px);
+
+			border: 3px solid white;
+			color: white;
+			background-color: transparent;
+			vertical-align: top;
+			line-height: 3em;
+			
+			padding-left: 10px;
+			text-align: left;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+		::placeholder {
+			color: lightgray;
+		}
+		#searchbar_icon {
+			display: inline-block;
+			height: 3em;
+			width: 3em;
+			border: 3px solid white;
+		}
+		#searchbar_icon > i {
+			width: 100%;
+			height: 100%;
+			display: -webkit-flex;
+			display: flex;
+			align-items: center;
+			text-align: center;
+			justify-content: center;
+		}
+
+		#searchbar_flag {
 			background-color: red;
+			width: calc(100% - 3em - 4px);
+			margin-left: calc(3em + 4px);
+			padding: 0;
+			height: 0;
+			overflow: hidden;
 		}
-		body[overlay_on = "true"] #invalid_location {
-			width: 20.5em !important;
+		#searchbar_flag[show="true"] {
+			padding: 0.25em;
+			height: initial;
 		}
 
+		/* Figures */
+		#container_figures {
+			width: 100%;
+			text-align: center;
+			font-size: 13px;
+		}
+		.keyfigure {
+			margin-bottom: 40px;
+			text-align: left;
+			margin: 1.4em;
+			margin-right: 2.0em;
+			margin-left: 2.0em;
+			display: inline-block;
+		}
+		.keyfigure .number {
+			display: inline-block;
+			font-size: 1.5em;
+			font-weight: 500;
+		}
+		.keyfigure .text {
+			font-size: 0.8em;
+		}
+		.keyfigure .unit {
+			display: inline-block;
+			margin-top: 0.5em;
+			font-size: 0.8em;
+			vertical-align: top;
+		}
+		.figures_two_wrap_helper {
+			display: inline-block;
+		}
+		.keyfigure:last-child {
+			width: auto;
+			margin-bottom: 0em;
+		}
+
+		.placeholder {
+			width: 100%;
+			height: 2.5em;
+		}
+		.placeholder.x2 {
+			height: 5em;
+		}
+		.placeholder.x3 {
+			height: 7.5em;
+		}
+		.placeholder.x4 {
+			height: 10em;
+		}
+
+		#license {
+			position: absolute;
+			bottom: 0;
+			right: 0;
+			font-size: 0.75em;
+			padding: 0.5em;
+			z-index: 100;
+		}
 		a {
 			color: inherit;
 		}
 
-		h4 {
-			margin-left: 50px;
-		}
-		.locations {
+
+
+		#container_locations {
 			width: 100%;
 			text-align: center;
 		}
 
-		#figures_container {
-			width: 90%;
+		#subcontainer {
+			display: inline-block;
+			width: 88%;
+			max-width: 30em;
+			text-align: left;
 		}
-		.keyfigure {
-			width: 40%;
-			margin-bottom: 40px;
+		.location_header {
+			font-weight: 600;
+			margin-top: 1em;
+			margin-bottom: 0.5em;
 		}
-		.keyfigure .number {
-			width: 170px;
-			font-size: 1.2em;
-			font-weight: 500;
+		.location_city {
+			display: inline-block;
+			margin-right: 0.5em;
+			margin-bottom: 0.5em;
+			border: 1px solid white;
+			padding: 0.5em;
+			cursor: pointer;
 		}
-		.keyfigure .unit {
-			margin-top: 0.5em;
-			width: 5em;
-			font-size: 0.6em;
+		.location_city:hover {
+			background-color: gray;
 		}
-		#figures_placeholder {
-			height: 150px;
+
+		body[overlay="0"] #overlay_background { 
+			background-color: transparent;
 		}
-	}
-	*/
 
-</style>
+		body[overlay="0"] #searchbar {
+			position: absolute;
+			top: 1em;
+			left: 1em;
+			width: calc(100% - 5.25em);
+			max-width: 350px;
+		}
 
-<body onload="start()" overlay_on="true">
+		body[overlay="0"] #container_searchbar {
+			text-align: left;
+		}
 
-	<canvas></canvas>
+		body[overlay="0"] #logo {
+			position: absolute;
+			top: 0.75em;
+			right: 0.75em;
+			width: 3.5em;
+			height: 3.5em;
+		}
 
-	<div id="landing_overlay">
-		<div id="container_landing">
-			<div class="placeholder half" id="figures_placeholder"></div>
-			<div id="figures_container">
-				<div class="keyfigure">
-					<div class="number">39000</div>
-					<div class="unit">sq. km^2</div>
-					<div class="text">covered</div>
-				</div>
+		body[overlay="0"] .hide_on_overlay_off {
+			display: none;
+		}
+		body[overlay="1"] .hide_on_overlay_on {
+			display: none !important;
+		}
 
-				<div class="keyfigure">
-					<div class="number">200</div>
-					<div class="unit">Billion</div>
-					<div class="text">Points in total</div>
-				</div>
+		body[overlay="0"] {
+			height: 100%;
+			overflow: hidden;
+		}
 
-				<div class="keyfigure">
-					<div class="number">6000</div>
-					<div class="unit">GBs</div>
-					<div class="text">of LIDAR data</div>
-				</div>
+		/* Hide canvas on overlay show */
+		body[overlay="1"] canvas {
+			height: 0vh !important;
+		}
 
-				<div class="keyfigure">
-					<div class="number">2000</div>
-					<div class="unit">GBs</div>
-					<div class="text">of images</div>
-				</div>
+		#container_about {
+			text-align: center;
+		}
+
+		#about {
+			display: inline-block;
+			margin-bottom: 0.5em;
+			color: white;
+		}
+
+		#help {
+			position: absolute;
+			left: 1em;
+			bottom: 1em;
+			width: 2em;
+			height: 2em;
+			background-color:rgba(211, 211, 211, 0.3);
+			text-align: center;
+			line-height: 2em;
+			font-weight: bold;
+			cursor: pointer;
+			z-index: 100;
+		}
+
+		#help_box {
+			display: none;
+			position: absolute;
+			left: 1em;
+			bottom: 4em;
+			z-index: 100;
+			background-color:rgba(211, 211, 211, 0.3);
+			padding: 2em;
+			-webkit-user-select: none; /* Safari */        
+			-moz-user-select: none; /* Firefox */
+			-ms-user-select: none; /* IE10+/Edge */
+			user-select: none; /* Standard */
+		}
+		#help_box.visible {
+			display: initial;
+		}
+
+		img.tutorial_hint {
+			width: 10em;
+		}
+		div.tutorial_hint:not(:last-child) {
+			margin-bottom: 2em;
+		}
+
+		/* Screen size */
+		@media screen and (min-width: 480px) {
+			body[overlay="0"] #searchbar {
+				position: absolute;
+				top: 1em;
+				left: 1em;
+				width: 200px;
+			}
+			body[overlay="0"] #searchbar:hover {
+				width: 400px;
+			}
+		}
+		@media screen and (max-width: 480px) {
+			#license {
+				font-size: 0.5em;
+			}
+		}
+		@media screen and (max-width: 525px) {
+			/* #container_figures {
+				font-size: 8px;
+			} */
+			.figures_two_wrap_helper {
+				width: 100%;
+			}
+			.keyfigure {
+				vertical-align: top;
+				height: 4em;
+				width: 8em;
+				margin: 1em;
+			}
+			#help_box {
+				width: calc(100% - 2em);
+			}
+		}
+		@media screen and (max-width: 300px) {
+			.keyfigure {
+				width: 60% !important;
+			}
+		}
+
+	</style>
+
+	<body overlay="1" onload="start()">
+
+		<!-- <div id="tutorial_overlay">
+			<img class="tutorial_hint" id="tutorial_move_hint" src="Images/hint_to_move.png"></img>
+			<div class="tutorial_hint" id="tutorial_move_hint_text">Shift and Drag to move around</div>
+			<img class="tutorial_hint" id="tutorial_rotate_hint" src="Images/hint_to_rotate.png"></img>
+			<div class="tutorial_hint" id="tutorial_rotate_hint_text">Drag to rotate around</div>
+		</div> -->
+
+		<div id="help" class="hide_on_overlay_on">?</div>
+		<div id="help_box" class="hide_on_overlay_on">
+			<img class="tutorial_hint" src="Images/hint_to_move.png"></img>
+			<div class="tutorial_hint">Shift and Drag to move around</div>
+			<img class="tutorial_hint" src="Images/hint_to_rotate.png"></img>
+			<div class="tutorial_hint">Drag to rotate around</div>
+		</div>
+
+		<div id="overlay_background">
+			<div id="container_logo">
+				<img id="logo" src="Images/Logo.png"></img>
 			</div>
-
-			<br>
-			<div id="infobox">
-				I've mapped all aerial pictures of NRW to the LIDAR points made available by the OpenNRW initiative.
-				In total you can browse ~39000 square kilometers equaling about ~6TB of LIDAR data and ~2TB of Images.
-			</div>
-			<div class="placeholder half"></div>
-			<div class="container_locations">
-				<h4>Places:</h4>
-				<div class="locations">
-						<div class="location_city">Drachenfelsburg</div>
-						<div class="location_city">Naturpark XYZ</div>
+			<div id="container_figures" class="hide_on_overlay_off">
+					<div class="figures_two_wrap_helper">
+						<!-- <div class="figures_helper"> -->
+							<div class="keyfigure">
+								<div class="number">39000</div>
+								<div class="unit">sq. km^2</div>
+								<div class="text">covered</div>
+							</div>
+						<!-- </div> -->
+						<!-- <div class="figures_helper"> -->
+							<div class="keyfigure">
+								<div class="number">200</div>
+								<div class="unit">Billion</div>
+								<div class="text">Points</div>
+							</div>
+						<!-- </div> -->
 					</div>
-				<h4>Cities:</h4>
-				<div class="locations">
-					<div class="location_city">Köln</div>
-					<div class="location_city">Düsseldorf</div>
-					<div class="location_city">Dortmund</div>
-					<div class="location_city">Essen</div>
-					<div class="location_city">Duisburg</div>
-					<div class="location_city">Bochum</div>
-					<div class="location_city">Wuppertal</div>
-					<div class="location_city">Bielefeld</div>
-					
+					<div class="figures_two_wrap_helper">
+						<!-- <div class="figures_helper"> -->
+							<div class="keyfigure">
+								<div class="number">6000</div>
+								<div class="unit">GBs</div>
+								<div class="text">of LIDAR data</div>
+							</div>
+						<!-- </div> -->
+						<!-- <div class="figures_helper"> -->
+							<div class="keyfigure">
+								<div class="number">2000</div>
+								<div class="unit">GBs</div>
+								<div class="text">of images</div>
+							</div>
+						<!-- </div> -->
+					</div>
+				</div>
+			<div id="container_searchbar">
+				<div id="searchbar">
+					<div id="searchbar_icon"><i class="fas fa-search"></i></div>
+					<input id="searchbar_entry_field" autofocus></input>
+					<div id="searchbar_flag" show="false">Nicht in NRW</div>
 				</div>
 			</div>
-			<div class="placeholder double"></div>
+			<div id="container_locations" class="hide_on_overlay_off">
+				<div id="subcontainer">
+					<div class="location_header">Places:</div>
+					<div class="locations">
+							<div class="location_city" onclick="goToLatLng(51.1610129, 6.870557)">Schloss Bernrath</div>
+							<div class="location_city" onclick="goToLatLng(51.4877427, 7.043917)">Zeche Zollverein</div>
+							<div class="location_city" onclick="goToLatLng(51.911693, 8.839107)">Hermmansdenkmal</div>
+							<div class="location_city" onclick="goToLatLng(50.877264, 7.122781)">Flughafen Köln</div>
+							<div class="location_city" onclick="goToLatLng(50.664391, 7.210468)">Drachenfelsburg</div>
+							<div class="location_city" onclick="goToLatLng(51.731987, 7.534085)">Schloss Nordkirchen</div>
+							<div class="location_city" onclick="goToLatLng(51.667212, 6.451361)">Archäologischer Park Xanten</div>
+							<div class="location_city" onclick="goToLatLng(51.299887, 7.674523)">Burg Altena</div>
+							<div class="location_city" onclick="goToLatLng(52.014438, 8.526991)">Burg Sparrenburg</div>
+							<div class="location_city" onclick="goToLatLng(51.142016, 6.557364)">Schloss Dyck</div>
+						</div>
+					<div class="location_header">Cities:</div>
+					<div class="locations">
+						<div class="location_city" onclick="goToLatLng(50.9375310, 6.96027860)">Köln</div>
+						<div class="location_city" onclick="goToLatLng(51.2277411, 6.77345560)">Düsseldorf</div>
+						<div class="location_city" onclick="goToLatLng(51.5135872, 7.46529810)">Dortmund</div>
+						<div class="location_city" onclick="goToLatLng(51.4556432, 7.01155519)">Essen</div>
+						<div class="location_city" onclick="goToLatLng(51.4344078, 6.76232930)">Duisburg</div>
+						<div class="location_city" onclick="goToLatLng(51.4818445, 7.21623629)">Bochum</div>
+					</div>
+				</div>
+			</div>
+			<div class="placeholder x3"></div>
+			<div id="container_about" class="hide_on_overlay_off">
+				<div id="about">Made with ♥︎ by Tristan Menzinger</div>
+				<br>
+				<a id="github_ref" class="github-button" href="https://github.com/TristanMenzinger/NRWOpenLidarViewer/blob/master/README.md" data-icon="octicon-star" data-size="large" aria-label="NRWOpenLidarViewer on GitHub">NRWOpenLidarViewer on GitHub</a>
+				<div class="placeholder"></div>
 		</div>
-	</div>
+		<div id="license" class="hide_on_overlay_on">Provider: <a href="https://open.nrw">Land NRW (2019)</a>
+			// Data: <a href="https://www.opengeodata.nrw.de/produkte/geobasis/dom/dom1l/index.html">Opengeodata.NRW</a> 
+			// License: <a href="http://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a></div>
+		<canvas id="threejscanvas"></canvas>
+	</body>
 
-	<div id="search_container">
-		<div id="search_div"><i class="fas fa-search"></i></div>
-		<div id="search_bar">
-			<input id="autocomplete_input"></input>
-			<div id="invalid_location" class="hide_by_height">Not in NRW</div>
-		</div>
-	</div>
-	
-	<img id="logo" src="Images/Logo.png"></img>
-	<div id="license" class="">Provider: <a href="https://open.nrw">Land NRW (2019)</a>
-		 // Data: <a href="https://www.opengeodata.nrw.de/produkte/geobasis/dom/dom1l/index.html">Opengeodata.NRW</a> 
-		 // License: <a href="http://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a></div>
-</body>
 </html>
