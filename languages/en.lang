@@ -3,7 +3,7 @@ LANGUAGE=DE
 //Elements
 places=Places
 cities=Cities
-searchbar_tooltip=Suche nach Ort
+searchbar_tooltip=Search
 
 other_language=de
 other_language_url=../de/index.html
