@@ -240,7 +240,7 @@ let start = async () => {
 		document.getElementById("help_box").classList.toggle("visible");
 	});
 
-	document.addEventListener("touchmove", preventBehavior, {passive: false});
+	//document.addEventListener("touchmove", preventBehavior, {passive: false});
 
 	//resize listener for threejs
 	window.addEventListener( 'resize', onWindowResize, false );
