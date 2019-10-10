@@ -109,6 +109,12 @@
 			overflow: hidden;
 			text-overflow: ellipsis;
 		}
+          #searchbar_entry_field:hover {
+               background-color: black;
+          }
+          #searchbar_entry_field:focus {
+               background-color: black;
+          }
 		::placeholder {
 			color: lightgray;
 		}
@@ -439,7 +445,7 @@
 			<div id="container_searchbar">
 				<div id="searchbar">
 					<div id="searchbar_icon"><i class="fas fa-search"></i></div>
-					<input id="searchbar_entry_field" autofocus placeholder="**searchbar_tooltip**"></input>
+					<input id="searchbar_entry_field" onClick="this.setSelectionRange(0, this.value.length)" autofocus placeholder="**searchbar_tooltip**"></input>
 					<div id="searchbar_flag" show="false">**not_in_nrw**</div>
 				</div>
 			</div>

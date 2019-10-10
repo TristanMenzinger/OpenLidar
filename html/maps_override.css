@@ -1,4 +1,5 @@
 /* Google maps styling override */
+
 .pac-container, .pac-item {
      background-color: black;
      color: white;
@@ -6,20 +7,37 @@
      border-left: 0.3em solid #ffffff00;
 }
 
-.pac-item {
-     cursor: pointer;
+.pac-matched {
+     font-size: 1.25em;
+     margin-left: 1em;
+
 }
 
-.pac-item:hover {
+.pac-icon, .pac-icon-marker {
+     display: none;
+}
+
+.pac-item {
+     cursor: pointer;
+     height: 4em;
+     line-height: 4em;
+}
+
+.pac-item:hover, .pac-item:focus {
      background-color: black;
      border: none;
-     border-left: 0.3em solid white;
+     border-left: 0.5em solid white;
+     z-index: 10;
+}
+.pac-item:focus { 
+     border-left: 0.5em solid white;
 }
 
 .pac-item-selected,
 .pac-item-selected:hover {
      border: none;
      background-color: black;
+     border-left: 0.5em solid white;
 }
 
 .pac-item-query {
