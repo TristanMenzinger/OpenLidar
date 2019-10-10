@@ -171,6 +171,8 @@ let zoomToNewPlace = (x, y) => {
 
 function initTransferControlsListener() {
 
+	document.addEventListener("touchmove", preventBehavior, {passive: false});
+
 	// Important
 	// Switches focus to the 3D Canvas when neccessary 
 	document.addEventListener("click", function(event){
