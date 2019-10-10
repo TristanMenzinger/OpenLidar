@@ -67,6 +67,8 @@
 
 	#search_div {
 
+		display: inline-block;
+
 		/* This stops the border from adding padding*/
 		box-sizing: border-box;
 		-moz-box-sizing: border-box;
@@ -264,7 +266,6 @@
 	}
 
 	body[overlay_on = "true"] #search_container {
-		left: calc(50% - 12.5em);
 		top: 40%;
 	}
 	body[overlay_on = "true"] #autocomplete_input {
@@ -362,7 +363,20 @@
 		display: block;
 	}
 
+	@media screen and (max-width: 480px) {
+		body[overlay_on = "true"] #autocomplete_input {
+			background-color: red;
+			width: calc(100vw - 60px - 43px - 110px);
+		}
+		body[overlay_on = "true"] #search_container {
+			background-color: blue;
+			width: 100%;
+			left: 0;
+			padding: 30px;
+		}
+	}
 
+	/*
 	@media screen and (max-width: 1400px) {
 		#figures_container {
 			width: 55%;
@@ -377,13 +391,8 @@
 		}
 	}
 
-		/********************/
 
-	@media only screen and (max-device-width: 480px) {
-		body {
-			font-size: 3em;
-		}
-
+	@media only screen and (max-width: 480px) {
 		#logo {
 			position: absolute;
 			right: 10px;
@@ -404,12 +413,10 @@
 
 		#autocomplete_input:hover {
 			width: 14em;
-			background-color: red;
 		}
 
 		#autocomplete_input:focus {
 			width: 14em;
-			background-color: red;
 		}
 
 		#autocomplete_input:not(:hover):not(:focus) ~ #invalid_location{
@@ -420,7 +427,6 @@
 			width: 16.8em;
 		}
 
-		/* Search bar adaption for mobile */
 		.pac-icon { 
 			height: 0em;
 		}
@@ -434,7 +440,6 @@
 			font-size: 1.25em;
 		}
 
-		/* Overlay adaption for mobile */
 		body[overlay_on = "true"] #logo {
 			left: calc(50% - 5em);
 			top: calc(30% - 7em);
@@ -442,12 +447,12 @@
 		}
 
 		body[overlay_on = "true"] #search_container {
-			left: 5%;
-			width: 90%;
+			width: 100%;
 			top: 40%;
 		}
 		body[overlay_on = "true"] #autocomplete_input {
-			width: 17em;
+			width: 100%;
+			background-color: red;
 		}
 		body[overlay_on = "true"] #invalid_location {
 			width: 20.5em !important;
@@ -486,6 +491,7 @@
 			height: 150px;
 		}
 	}
+	*/
 
 </style>
 

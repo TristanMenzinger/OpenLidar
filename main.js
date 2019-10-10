@@ -26,6 +26,8 @@ let CONCURRENT_HTTP_REQUEST_COUNT = 0;
 
 let LOAD_AROUND_NR = 2;
 
+let clicked_entry_field = false;
+
 //Prevents scrolling the page 
 let preventBehavior = (e) => {
 	e.preventDefault(); 
@@ -55,16 +57,16 @@ let WGS2ll = (x, y) => {
 }
 
 function showWrongCountyNote() {
-	document.getElementById("invalid_location").classList.remove("hide_by_height");
+	document.getElementById("searchbar_flag").setAttribute("show", "true");
 }
 
 function hideWrongCountyNote() {
-	document.getElementById("invalid_location").classList.add("hide_by_height");
+	document.getElementById("searchbar_flag").setAttribute("show", "false");
 }
 
 function initAutocomplete() {
 
-	let input = document.getElementById('autocomplete_input');
+	let input = document.getElementById('searchbar_entry_field');
 	let autocomplete = new google.maps.places.Autocomplete(input);
 	autocomplete.setFields(['address_components', 'geometry','name']);
 	//autocomplete.setTypes(['geocode', 'regions'])
@@ -87,19 +89,12 @@ function initAutocomplete() {
 			showWrongCountyNote();
 		}else {
 			hideWrongCountyNote();
-               wgs_coords = ll2WGS(place.geometry.location.lat(), place.geometry.location.lng());
-               setTimeout(function(){ 
-                    zoomToNewPlace(wgs_coords[0], wgs_coords[1])
-                    first_search_done = true;
-                }, 500);
-			if(first_search_done === false) {
-                    removeOverlay();
-                    focus_to_touch_controls();
-				console.log("removed overlay");
-			}
+			goToLatLng(place.geometry.location.lat(), place.geometry.location.lng());
 		}
 	});
 }
+
+
 
 let euclidianDistance = (wgs_coords_a, wgs_coords_b) => {
 	var a = wgs_coords_a[0] - wgs_coords_b[0];
@@ -117,29 +112,58 @@ function cameraToNormalPos() {
 
 }
 
+let zoomToNewPlaceLatLng = (lat, lng) => {
+	wgs_coords = ll2WGS(lat, lng);
+	zoomToNewPlace(wgs_coords[0], wgs_coords[1]);
+	console.log(wgs_coords)
+}
+
+let goToLatLng = (lat, lng) => {
+	//Convert to WGS
+	wgs_coords = ll2WGS(lat, lng);
+	console.log(lat, lng);
+	goToWgs(wgs_coords[0], wgs_coords[1]);
+}
+
+let goToWgs = (x, y) => {
+
+	//Wait a little so the animation can work
+	setTimeout(function(){ 
+		zoomToNewPlace(wgs_coords[0], wgs_coords[1])
+		first_search_done = true;
+	}, 500);
+
+	if(first_search_done === false) {
+		removeOverlay();
+		initTransferControlsListener();
+	}
+
+	focus_to_touch_controls();
+}
+
 let zoomToNewPlace = (x, y) => {
 
-	x = roundDown50(x);
-	y = roundDown50(y);
+	xR = roundDown50(x);
+	yR = roundDown50(y);
 
 	//get distance from new loc to current viewing point
-	let distance = euclidianDistance([x, y], [controls.target.x, controls.target.y])
+	let distance = euclidianDistance([xR, yR], [controls.target.xR, controls.target.yR])
 	console.log("eucl. distance to new is:", distance)
 	if(distance > 400) {
-          //clean all before loaded ones from scene at least
-          all_tiles.map(tile => {
-               tile.remove();
-          });
-          all_tiles = [];
+		//clean all before loaded ones from scene at least
+		all_tiles.map(tile => {
+			tile.remove();
+		});
+		all_tiles = [];
 
-          //clean all hint tiles
-          all_hint_tiles.map(hint_tile => {
-               hint_tile.remove();
-          })
-          all_hint_tiles = [];
+		//clean all hint tiles
+		all_hint_tiles.map(hint_tile => {
+			hint_tile.remove();
+		})
+		all_hint_tiles = [];
 
-          //reset global offset to nothing
-          set_global_offset_z(0);
+		//reset global offset to nothing
+		set_global_offset_z(0);
 	}
 
 	moveCamera(x, y)
@@ -147,36 +171,65 @@ let zoomToNewPlace = (x, y) => {
 
 function initTransferControlsListener() {
 
-	autocomplete_input = document.getElementById("autocomplete_input");
-	autocomplete_input.addEventListener("mouseover", function() {
+	// Important
+	// Switches focus to the 3D Canvas when neccessary 
+	document.addEventListener("click", function(event){
+		let targetElement = event.target || event.srcElement;
+		let is_clicked_entry_field = targetElement === document.getElementById("searchbar_entry_field");
+		if(clicked_entry_field && !is_clicked_entry_field) {
+			focus_to_touch_controls();
+		}
+		clicked_entry_field = is_clicked_entry_field;
+	});
+
+	searchbar_entry_field = document.getElementById("searchbar_entry_field");
+	searchbar_entry_field.addEventListener('keypress', (e) => {
+		let key = e.which || e.keyCode;
+		if (key === 13) { // 13 is enter
+			focus_to_touch_controls();
+		}
+	});
+
+	searchbar_entry_field = document.getElementById("searchbar_entry_field");
+	searchbar_entry_field.addEventListener("mouseover", function() {
 		controls.enabled = false;
 	});
 
+	document.querySelector("canvas").addEventListener("click", function() {
+		controls.enabled = true;
+		searchbar_entry_field.blur();
+	})
+
 	document.querySelector("canvas").addEventListener("mouseover", function() {
 		controls.enabled = true;
-		autocomplete_input.blur();
+		searchbar_entry_field.blur();
 	});
 
-	autocomplete_input.addEventListener('keypress', (e) => {
-		let key = e.which || e.keyCode;
-		if (key === 13) { // 13 is enter
-			controls.enabled = true;
-			autocomplete_input.blur();
-		}
-	});
+	// searchbar_entry_field.addEventListener('keypress', (e) => {
+	// 	let key = e.which || e.keyCode;
+	// 	if (key === 13) { // 13 is enter
+	// 		controls.enabled = true;
+	// 		searchbar_entry_field.blur();
+	// 	}
+	// });
 	/*
-	autocomplete_input.addEventListener("mouseout", function() {
+	searchbar_entry_field.addEventListener("mouseout", function() {
 		console.log("hovering out");
 		controls.enabled = true;
 	});
 	*/
 }
 
-// new, works?
-function focus_to_touch_controls() {
-     autocomplete_input = document.getElementById("autocomplete_input");
+let focus_to_touch_controls = () => {
+	searchbar_entry_field = document.getElementById("searchbar_entry_field");
 	controls.enabled = true;
-	autocomplete_input.blur();
+	searchbar_entry_field.blur();
+}
+
+let 	focus_to_searchbar = () => {
+	searchbar_entry_field = document.getElementById("searchbar_entry_field");
+	controls.enabled = false;
+	searchbar_entry_field.focus();
 }
 
 let start = async () => {
@@ -188,8 +241,6 @@ let start = async () => {
 
 	GEOMETRY_LOADING_HINT = new THREE.PlaneGeometry(50, 50, 50);
 	MATERIAL_LOADING_HINT = new THREE.MeshBasicMaterial( {color: 0x9ACD32, transparent: true, opacity: 0.3, side: THREE.DoubleSide} );
-
-	initTransferControlsListener();
 
 	scene = new THREE.Scene();
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
@@ -250,11 +301,18 @@ let start = async () => {
 	// renderer.domElement.addEventListener("dblclick", onclick, true);
 	renderer.domElement.addEventListener("click", onclick, true);
 	raycaster = new THREE.Raycaster();
+
+	// searchbar_entry_field = document.getElementById("searchbar_entry_field");
+	// searchbar_entry_field.addEventListener("click", () => {
+	// 	console.log("hello");
+	// })
+
+	focus_to_searchbar();
 }
 
 function onclick(event) {
 
-	// console.log("clicked")
+	console.log("clicked")
 
 	var mouse = new THREE.Vector2();
 	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
@@ -579,8 +637,16 @@ class TileObject {
 		//Only if not yet started to download or finished shall we download the data again
 		if(!this.isDownloadStarted() && !this.isDownloadFinished()) {
 			this.showLoadingHint()
-			await this.downloadData();
-			this.show();
+			try {
+				await this.downloadData();
+
+				if(this.xyz != null && this.colors !== null) {
+					this.show();
+				}
+
+			}catch {
+				console.log("Error downloading data")
+			}
 			this.removeLoadingHint();
 		}
 	}
@@ -631,9 +697,14 @@ let loadPoints = async (x, y) => {
 	//let request_url = "https://f002.backblazeb2.com/file/alllidar/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/lidar-data/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	let request_url = "https://f003.backblazeb2.com/file/eunrwopenlidardata/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-	let xyz = await makeRequest("GET", request_url);
-	xyz = CSVToArray(xyz, ",")
-	return xyz;
+	try {
+		let xyz = await makeRequest("GET", request_url);
+		xyz = CSVToArray(xyz, ",")
+		return xyz;
+	}catch {
+		console.log("Fetch returned 404, probably water.")
+		return null;		
+	}
 }
 
 //Load the color data from backblaze via HTTP-Request
@@ -645,9 +716,14 @@ let loadColor = async (x, y) => {
 	//let request_url = "https://f002.backblazeb2.com/file/alllidar/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/lidar-data/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	let request_url = "https://f003.backblazeb2.com/file/eunrwopenlidardata/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-	let colors = await makeRequest("GET", request_url);
-	colors = CSVToArray(colors, " ")
-	return colors;
+	try {
+		let colors = await makeRequest("GET", request_url);
+		colors = CSVToArray(colors, " ")
+		return colors;
+	}catch {
+		console.log("Fetch returned 404, probably water.")
+		return null;		
+	}
 }
 
 //Add a set of points to the scene
@@ -666,7 +742,7 @@ let createTilePoints = (tileObject) => {
 	let color = new THREE.Color();
 
 	if(global_offset_z === 0) {
-          global_offset_z = 1; //Just so its immediately set.
+		global_offset_z = 1; //Just so its immediately set.
 		let avg_z = 0;
 		for (let i in tileObject.xyz) {
 			avg_z = avg_z + Number(tileObject.xyz[i][2]);
@@ -713,7 +789,7 @@ let createTilePoints = (tileObject) => {
 
 /* GUI MODIFICATIONS */
 function removeOverlay() {
-	document.body.setAttribute("overlay_on","false");
+	document.body.setAttribute("overlay","0");
 }
 
 //Convert a "5a7aff" HEX to a (255,255,255) RGB Value
