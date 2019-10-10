@@ -151,8 +151,8 @@
 			margin-bottom: 40px;
 			text-align: left;
 			margin: 1.4em;
-			margin-right: 2.0em;
-			margin-left: 2.0em;
+			margin-right: 1.6em;
+			margin-left: 1.6em;
 			display: inline-block;
 		}
 		.keyfigure .number {
@@ -336,7 +336,6 @@
 			width: 2em;
 		}
 
-		/* Screen size */
 		@media screen and (min-width: 480px) {
 			body[overlay="0"] #searchbar {
 				position: absolute;
@@ -353,14 +352,14 @@
 				font-size: 0.5em;
 			}
 		}
-		@media screen and (max-width: 525px) {
+		@media screen and (max-width: 550px) {
 			/* #container_figures {
 				font-size: 8px;
 			} */
 			.figures_two_wrap_helper {
 				width: 100%;
 			}
-			.keyfigure {
+			.keyfigure, .keyfigure:last-child {
 				vertical-align: top;
 				height: 4em;
 				width: 8em;
@@ -370,9 +369,10 @@
 				width: calc(100% - 2em);
 			}
 		}
+		/* Screen size */
 		@media screen and (max-width: 300px) {
-			.keyfigure {
-				width: 60% !important;
+			.keyfigure, .keyfigure:last-child {
+				width: 10em;
 			}
 		}
 
