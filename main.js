@@ -234,6 +234,12 @@ let 	focus_to_searchbar = () => {
 
 let start = async () => {
 
+	let help_button = document.getElementById("help");
+	help_button.addEventListener("click", function() {
+		console.log("toggling");
+		document.getElementById("help_box").classList.toggle("visible");
+	});
+
 	document.addEventListener("touchmove", preventBehavior, {passive: false});
 
 	//resize listener for threejs
@@ -312,7 +318,7 @@ let start = async () => {
 
 function onclick(event) {
 
-	console.log("clicked")
+	document.getElementById("help_box").classList.remove("visible");
 
 	var mouse = new THREE.Vector2();
 	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;

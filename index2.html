@@ -23,6 +23,9 @@
 
 		<!-- Google maps style override  -->
 		<link rel="stylesheet" href="maps_override.css">
+
+		<!-- Github Button -->
+		<script async defer src="https://buttons.github.io/buttons.js"></script>
 	</head>
 
 	<style>
@@ -93,7 +96,7 @@
 			/* font-size: 12pt; */
 			height: 3em;
 			
-			width: calc( 100%  - 3em - 4px);
+			width: calc( 100%  - 3em - 6px);
 
 			border: 3px solid white;
 			color: white;
@@ -104,6 +107,7 @@
 			padding-left: 10px;
 			text-align: left;
 			overflow: hidden;
+			text-overflow: ellipsis;
 		}
 		::placeholder {
 			color: lightgray;
@@ -175,7 +179,13 @@
 
 		.placeholder {
 			width: 100%;
-			height: 2em;
+			height: 2.5em;
+		}
+		.placeholder.x2 {
+			height: 5em;
+		}
+		.placeholder.x3 {
+			height: 7.5em;
 		}
 		.placeholder.x4 {
 			height: 10em;
@@ -183,11 +193,11 @@
 
 		#license {
 			position: absolute;
-			display: none;
 			bottom: 0;
 			right: 0;
 			font-size: 0.75em;
 			padding: 0.5em;
+			z-index: 100;
 		}
 		a {
 			color: inherit;
@@ -227,10 +237,6 @@
 			background-color: transparent;
 		}
 
-		body[overlay="0"] #license {
-			display: initial;
-		}
-
 		body[overlay="0"] #searchbar {
 			position: absolute;
 			top: 1em;
@@ -254,6 +260,9 @@
 		body[overlay="0"] .hide_on_overlay_off {
 			display: none;
 		}
+		body[overlay="1"] .hide_on_overlay_on {
+			display: none !important;
+		}
 
 		body[overlay="0"] {
 			height: 100%;
@@ -263,6 +272,54 @@
 		/* Hide canvas on overlay show */
 		body[overlay="1"] canvas {
 			height: 0vh !important;
+		}
+
+		#container_about {
+			text-align: center;
+		}
+
+		#about {
+			display: inline-block;
+			margin-bottom: 0.5em;
+			color: white;
+		}
+
+		#help {
+			position: absolute;
+			left: 1em;
+			bottom: 1em;
+			width: 2em;
+			height: 2em;
+			background-color:rgba(211, 211, 211, 0.3);
+			text-align: center;
+			line-height: 2em;
+			font-weight: bold;
+			cursor: pointer;
+			z-index: 100;
+		}
+
+		#help_box {
+			display: none;
+			position: absolute;
+			left: 1em;
+			bottom: 4em;
+			z-index: 100;
+			background-color:rgba(211, 211, 211, 0.3);
+			padding: 2em;
+			-webkit-user-select: none; /* Safari */        
+			-moz-user-select: none; /* Firefox */
+			-ms-user-select: none; /* IE10+/Edge */
+			user-select: none; /* Standard */
+		}
+		#help_box.visible {
+			display: initial;
+		}
+
+		img.tutorial_hint {
+			width: 10em;
+		}
+		div.tutorial_hint:not(:last-child) {
+			margin-bottom: 2em;
 		}
 
 		/* Screen size */
@@ -295,6 +352,9 @@
 				width: 8em;
 				margin: 1em;
 			}
+			#help_box {
+				width: calc(100% - 2em);
+			}
 		}
 		@media screen and (max-width: 300px) {
 			.keyfigure {
@@ -305,6 +365,21 @@
 	</style>
 
 	<body overlay="1" onload="start()">
+
+		<!-- <div id="tutorial_overlay">
+			<img class="tutorial_hint" id="tutorial_move_hint" src="Images/hint_to_move.png"></img>
+			<div class="tutorial_hint" id="tutorial_move_hint_text">Shift and Drag to move around</div>
+			<img class="tutorial_hint" id="tutorial_rotate_hint" src="Images/hint_to_rotate.png"></img>
+			<div class="tutorial_hint" id="tutorial_rotate_hint_text">Drag to rotate around</div>
+		</div> -->
+
+		<div id="help" class="hide_on_overlay_on">?</div>
+		<div id="help_box" class="hide_on_overlay_on">
+			<img class="tutorial_hint" src="Images/hint_to_move.png"></img>
+			<div class="tutorial_hint">Shift and Drag to move around</div>
+			<img class="tutorial_hint" src="Images/hint_to_rotate.png"></img>
+			<div class="tutorial_hint">Drag to rotate around</div>
+		</div>
 
 		<div id="overlay_background">
 			<div id="container_logo">
@@ -358,6 +433,7 @@
 							<div class="location_city" onclick="goToLatLng(51.1610129, 6.870557)">Schloss Bernrath</div>
 							<div class="location_city" onclick="goToLatLng(51.4877427, 7.043917)">Zeche Zollverein</div>
 							<div class="location_city" onclick="goToLatLng(51.911693, 8.839107)">Hermmansdenkmal</div>
+							<div class="location_city" onclick="goToLatLng(50.877264, 7.122781)">Flughafen Köln</div>
 							<div class="location_city" onclick="goToLatLng(50.664391, 7.210468)">Drachenfelsburg</div>
 							<div class="location_city" onclick="goToLatLng(51.731987, 7.534085)">Schloss Nordkirchen</div>
 							<div class="location_city" onclick="goToLatLng(51.667212, 6.451361)">Archäologischer Park Xanten</div>
@@ -367,21 +443,23 @@
 						</div>
 					<div class="location_header">Cities:</div>
 					<div class="locations">
-						<div class="location_city">Köln</div>
-						<div class="location_city">Düsseldorf</div>
-						<div class="location_city">Dortmund</div>
-						<div class="location_city">Essen</div>
-						<div class="location_city">Duisburg</div>
-						<div class="location_city">Bochum</div>
-						<div class="location_city">Wuppertal</div>
-						<div class="location_city">Bielefeld</div>
-						
+						<div class="location_city" onclick="goToLatLng(50.9375310, 6.96027860)">Köln</div>
+						<div class="location_city" onclick="goToLatLng(51.2277411, 6.77345560)">Düsseldorf</div>
+						<div class="location_city" onclick="goToLatLng(51.5135872, 7.46529810)">Dortmund</div>
+						<div class="location_city" onclick="goToLatLng(51.4556432, 7.01155519)">Essen</div>
+						<div class="location_city" onclick="goToLatLng(51.4344078, 6.76232930)">Duisburg</div>
+						<div class="location_city" onclick="goToLatLng(51.4818445, 7.21623629)">Bochum</div>
 					</div>
 				</div>
 			</div>
-			<div class="placeholder x4"></div>
+			<div class="placeholder x3"></div>
+			<div id="container_about" class="hide_on_overlay_off">
+				<div id="about">Made with ♥︎ by Tristan Menzinger</div>
+				<br>
+				<a id="github_ref" class="github-button" href="https://github.com/TristanMenzinger/NRWOpenLidarViewer/blob/master/README.md" data-icon="octicon-star" data-size="large" aria-label="NRWOpenLidarViewer on GitHub">NRWOpenLidarViewer on GitHub</a>
+				<div class="placeholder"></div>
 		</div>
-		<div id="license" class="">Provider: <a href="https://open.nrw">Land NRW (2019)</a>
+		<div id="license" class="hide_on_overlay_on">Provider: <a href="https://open.nrw">Land NRW (2019)</a>
 			// Data: <a href="https://www.opengeodata.nrw.de/produkte/geobasis/dom/dom1l/index.html">Opengeodata.NRW</a> 
 			// License: <a href="http://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a></div>
 		<canvas id="threejscanvas"></canvas>
