@@ -2,7 +2,7 @@ LANGUAGE=DE
 
 //Elements
 places=Places
-cities=Städte
+cities=Cities
 searchbar_tooltip=Suche nach Ort
 
 other_language=de
