@@ -704,7 +704,11 @@ let loadPoints = async (x, y) => {
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/wnrw/LidarData/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/alllidar/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/lidar-data/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-	let request_url = "https://f003.backblazeb2.com/file/eunrwopenlidardata/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	
+	//let request_url = "https://f003.backblazeb2.com/file/eunrwopenlidardata/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	
+	let request_url = "https://openlidar.menzinger.io/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	//let request_url = "http://localhost/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	try {
 		let xyz = await makeRequest("GET", request_url);
 		xyz = CSVToArray(xyz, ",")
@@ -723,7 +727,12 @@ let loadColor = async (x, y) => {
 	//let request_url = "https://f002.backblazeb2.com/file/lisonrw/wnrw/ColorData/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/alllidar/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	//let request_url = "https://f002.backblazeb2.com/file/lidar-data/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
-	let request_url = "https://f003.backblazeb2.com/file/eunrwopenlidardata/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	
+	//let request_url = "https://f003.backblazeb2.com/file/eunrwopenlidardata/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+
+	let request_url = "https://openlidar.menzinger.io/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+
+	//let request_url = "http://localhost/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	try {
 		let colors = await makeRequest("GET", request_url);
 		colors = CSVToArray(colors, " ")
