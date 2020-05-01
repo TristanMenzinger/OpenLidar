@@ -1,392 +1,399 @@
 <html>
-	<head>
-		<meta charset="UTF-8">
+<head>
+	<meta charset="UTF-8">
 
-		<script src="../js/main.js"></script>
-		<script src="../js/three.js"></script>
-		<script src="../js/OrbitControls.js"></script>
-		<script src="../js/pako.js"></script>
-		<script src="../js/proj4.js"></script>
+	<script src="../js/main.js"></script>
+	<script src="../js/three.js"></script>
+	<script src="../js/OrbitControls.js"></script>
+	<script src="../js/pako.js"></script>
+	<script src="../js/proj4.js"></script>
 
-		<!-- Autocomplete -->
-		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnAMjHEBHvaLLvHJxtwyTxvEKrmqf3S88&libraries=places&callback=initAutocomplete" async></script>
-		<!-- <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnAMjHEBHvaLLvHJxtwyTxvEKrmqf3S88&libraries=places&callback=initAutocomplete" async defer></script> -->
+	<!-- Autocomplete -->
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnAMjHEBHvaLLvHJxtwyTxvEKrmqf3S88&libraries=places&callback=initAutocomplete" async></script>
+	<!-- <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnAMjHEBHvaLLvHJxtwyTxvEKrmqf3S88&libraries=places&callback=initAutocomplete" async defer></script> -->
 
-		<!-- Roboto Font -->
-		<link href="https://fonts.googleapis.com/css?family=Roboto:400,300,700,500,100" rel="stylesheet">
-		
-		<!-- Fontawesome -->
-		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+	<!-- Roboto Font -->
+	<link href="https://fonts.googleapis.com/css?family=Roboto:400,300,700,500,100" rel="stylesheet">
 
-		<!--Important, neccessary for scaling in safari!-->
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- Fontawesome -->
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
 
-		<!-- Google maps style override  -->
-		<link rel="stylesheet" href="../html/maps_override.css">
+	<!--Important, neccessary for scaling in safari!-->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-		<!-- Github Button -->
-		<script async defer src="https://buttons.github.io/buttons.js"></script>
-	</head>
+	<!-- Google maps style override  -->
+	<link rel="stylesheet" href="../html/maps_override.css">
 
-	<style>
-		* {
-			box-sizing: border-box;
-			-moz-box-sizing: border-box;
-			-webkit-box-sizing: border-box;
-			transition: all 200ms linear;
-		}
+	<!-- Github Button -->
+	<script async defer src="https://buttons.github.io/buttons.js"></script>
+</head>
 
-		body {
-			margin: 0;
-			background-color: black;
-			color: white;
-			font-family: 'Roboto';
-		}
+<style>
+	* {
+		box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		-webkit-box-sizing: border-box;
+		transition: all 200ms linear;
+	}
 
-		canvas {
-			width: 100vw;
-			height: 100vh;
-			display: block;
-			position: fixed;
-			top: 0;
-			left: 0;
-		}	
+	body {
+		margin: 0;
+		background-color: black;
+		color: white;
+		font-family: 'Roboto';
+	}
 
-
-		/* Overlay */
-		#overlay_background {
-			width: 100%;
-			min-height: 100%;
-			background-color: black;
-		}
-
-		/* Logo */
-		#container_logo {
-			width: 100%;
-			text-align: center;
-			padding-top: 50px;
-			/* padding-bottom: 50px; */
-		}
-		#logo {
-			width: 200px;
-			z-index: 2;
-		}
-
-		/* Searchbar */
-		#container_searchbar {
-			padding: 2em;
-			width: 100%;
-			text-align: center;
-		}
-		#searchbar {
-			display: inline-block;
-			width: 100%;
-			max-width: 30em;
-			z-index: 2;
-		}
-		#searchbar_entry_field {
-
-			/* Override stupid default styling */
-			background-color: transparent;
-			outline: 0;
-			background-color: black;
-
-			display: inline-block;
-			font-size: 16px;
-			/* font-size: 12pt; */
-			height: 3em;
-			
-			width: calc( 100%  - 3em - 6px);
-
-			border: 3px solid white;
-			color: white;
-			background-color: transparent;
-			vertical-align: top;
-			line-height: 3em;
-
-			border-radius: 0;
-			
-			padding-left: 10px;
-			text-align: left;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
-          #searchbar_entry_field:hover {
-               background-color: black;
-          }
-          #searchbar_entry_field:focus {
-               background-color: black;
-          }
-		::placeholder {
-			color: lightgray;
-		}
-		#searchbar_icon {
-			display: inline-block;
-			height: 3em;
-			width: 3em;
-			border: 3px solid white;
-		}
-		#searchbar_icon > i {
-			width: 100%;
-			height: 100%;
-			display: -webkit-flex;
-			display: flex;
-			align-items: center;
-			text-align: center;
-			justify-content: center;
-		}
-
-		#searchbar_flag {
-			background-color: red;
-			width: calc(100% - 3em - 4px);
-			margin-left: calc(3em + 4px);
-			padding: 0;
-			height: 0;
-			overflow: hidden;
-		}
-		#searchbar_flag[show="true"] {
-			padding: 0.25em;
-			height: initial;
-		}
-
-		/* Figures */
-		#container_figures {
-			width: 100%;
-			text-align: center;
-			font-size: 13px;
-		}
-		.keyfigure {
-			margin-bottom: 40px;
-			text-align: left;
-			margin: 1.4em;
-			margin-right: 1.6em;
-			margin-left: 1.6em;
-			display: inline-block;
-		}
-		.keyfigure .number {
-			display: inline-block;
-			font-size: 1.5em;
-			font-weight: 500;
-		}
-		.keyfigure .text {
-			font-size: 0.8em;
-		}
-		.keyfigure .unit {
-			display: inline-block;
-			margin-top: 0.5em;
-			font-size: 0.8em;
-			vertical-align: top;
-		}
-		.figures_two_wrap_helper {
-			display: inline-block;
-		}
-		.keyfigure:last-child {
-			width: auto;
-			margin-bottom: 0em;
-		}
-
-		.placeholder {
-			width: 100%;
-			height: 2.5em;
-		}
-		.placeholder.x2 {
-			height: 5em;
-		}
-		.placeholder.x3 {
-			height: 7.5em;
-		}
-		.placeholder.x4 {
-			height: 10em;
-		}
-
-		#license {
-			position: absolute;
-			bottom: 0;
-			right: 0;
-			font-size: 0.75em;
-			padding: 0.5em;
-			z-index: 100;
-		}
-		a {
-			color: inherit;
-		}
+	canvas {
+		width: 100vw;
+		height: 100vh;
+		display: block;
+		position: fixed;
+		top: 0;
+		left: 0;
+	}	
 
 
+	/* Overlay */
+	#overlay_background {
+		width: 100%;
+		min-height: 100%;
+		background-color: black;
+	}
 
-		#container_locations {
-			width: 100%;
-			text-align: center;
-		}
+	/* Logo */
+	#container_logo {
+		width: 100%;
+		text-align: center;
+		padding-top: 50px;
+		/* padding-bottom: 50px; */
+	}
+	#logo {
+		width: 200px;
+		z-index: 2;
+		cursor: pointer;
+	}
 
-		#subcontainer {
-			display: inline-block;
-			width: 86%;
-			max-width: 30em;
-			text-align: left;
-		}
-		.location_header {
-			font-weight: 600;
-			margin-top: 1em;
-			margin-bottom: 0.5em;
-		}
-		.location_city {
-			display: inline-block;
-			margin-right: 0.5em;
-			margin-bottom: 0.5em;
-			border: 1px solid white;
-			padding: 0.5em;
-			cursor: pointer;
-		}
-		.location_city:hover {
-			background-color: gray;
-		}
+	/* Searchbar */
+	#container_searchbar {
+		padding: 2em;
+		width: 100%;
+		text-align: center;
+	}
+	#searchbar {
+		display: inline-block;
+		width: 100%;
+		max-width: 30em;
+		z-index: 2;
+	}
+	#searchbar_entry_field {
 
-		body[overlay="0"] #overlay_background { 
-			background-color: transparent;
-		}
+		/* Override stupid default styling */
+		background-color: transparent;
+		outline: 0;
+		background-color: black;
 
+		display: inline-block;
+		font-size: 16px;
+		/* font-size: 12pt; */
+		height: 3em;
+
+		width: calc( 100%  - 3em - 6px);
+
+		border: 3px solid white;
+		color: white;
+		background-color: transparent;
+		vertical-align: top;
+		line-height: 3em;
+
+		border-radius: 0;
+
+		padding-left: 10px;
+		text-align: left;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	#searchbar_entry_field:hover {
+		background-color: black;
+	}
+	#searchbar_entry_field:focus {
+		background-color: black;
+	}
+	::placeholder {
+		color: lightgray;
+	}
+	#searchbar_icon {
+		display: inline-block;
+		height: 3em;
+		width: 3em;
+		border: 3px solid white;
+	}
+	#searchbar_icon > i {
+		width: 100%;
+		height: 100%;
+		display: -webkit-flex;
+		display: flex;
+		align-items: center;
+		text-align: center;
+		justify-content: center;
+	}
+
+	#searchbar_flag {
+		background-color: red;
+		width: calc(100% - 3em - 4px);
+		margin-left: calc(3em + 4px);
+		padding: 0;
+		height: 0;
+		overflow: hidden;
+	}
+	#searchbar_flag[show="true"] {
+		padding: 0.25em;
+		height: initial;
+	}
+
+	/* Figures */
+	#container_figures {
+		width: 100%;
+		text-align: center;
+		font-size: 13px;
+	}
+	.keyfigure {
+		margin-bottom: 40px;
+		text-align: left;
+		margin: 1.4em;
+		margin-right: 1.6em;
+		margin-left: 1.6em;
+		display: inline-block;
+	}
+	.keyfigure .number {
+		display: inline-block;
+		font-size: 1.5em;
+		font-weight: 500;
+	}
+	.keyfigure .text {
+		font-size: 0.8em;
+	}
+	.keyfigure .unit {
+		display: inline-block;
+		margin-top: 0.5em;
+		font-size: 0.8em;
+		vertical-align: top;
+	}
+	.figures_two_wrap_helper {
+		display: inline-block;
+	}
+	.keyfigure:last-child {
+		width: auto;
+		margin-bottom: 0em;
+	}
+
+	.placeholder {
+		width: 100%;
+		height: 2.5em;
+	}
+	.placeholder.x2 {
+		height: 5em;
+	}
+	.placeholder.x3 {
+		height: 7.5em;
+	}
+	.placeholder.x4 {
+		height: 10em;
+	}
+
+	#license {
+		position: absolute;
+		bottom: 0;
+		right: 0;
+		font-size: 0.75em;
+		padding: 0.5em;
+		z-index: 100;
+	}
+	a {
+		color: inherit;
+	}
+
+
+
+	#container_locations {
+		width: 100%;
+		text-align: center;
+	}
+
+	#subcontainer {
+		display: inline-block;
+		width: 86%;
+		max-width: 30em;
+		text-align: left;
+	}
+	.location_header {
+		font-weight: 600;
+		margin-top: 1em;
+		margin-bottom: 0.5em;
+	}
+	.location_city {
+		display: inline-block;
+		margin-right: 0.5em;
+		margin-bottom: 0.5em;
+		border: 1px solid white;
+		padding: 0.5em;
+		cursor: pointer;
+	}
+	.location_city:hover {
+		background-color: gray;
+	}
+
+	body[overlay="0"] #overlay_background { 
+		background-color: transparent;
+	}
+
+	body[overlay="0"] #searchbar {
+		position: absolute;
+		top: 1em;
+		left: 1em;
+		width: calc(100% - 5.25em);
+		max-width: 350px;
+	}
+
+	body[overlay="0"] #container_searchbar {
+		text-align: left;
+	}
+
+	body[overlay="0"] #logo {
+		position: absolute;
+		top: 0.75em;
+		right: 0.75em;
+		width: 3.5em;
+		height: 3.5em;
+	}
+
+	body[overlay="0"] .hide_on_overlay_off {
+		display: none;
+	}
+	body[overlay="1"] .hide_on_overlay_on {
+		display: none !important;
+	}
+
+	body[overlay="0"] {
+		height: 100%;
+		overflow: hidden;
+	}
+
+	/* Hide canvas on overlay show */
+	body[overlay="1"] canvas {
+		height: 0vh !important;
+	}
+
+	#container_about {
+		text-align: center;
+	}
+
+	#about {
+		display: inline-block;
+		margin-bottom: 0.5em;
+		color: white;
+	}
+
+	#clean {
+		bottom: 3.5em;
+		padding: 0.45em;
+	}
+	#help {
+		bottom: 1em;
+	}
+	#clean, #help {
+		position: absolute;
+		left: 1em;
+		width: 2em;
+		height: 2em;
+		background-color:rgba(211, 211, 211, 0.3);
+		text-align: center;
+		line-height: 2em;
+		font-weight: bold;
+		cursor: pointer;
+		z-index: 100;
+	}
+
+	#help_box {
+		display: none;
+		position: absolute;
+		left: 3.5em;
+		bottom: 1em;
+		z-index: 100;
+		background-color:rgba(211, 211, 211, 0.3);
+		padding: 2em;
+		-webkit-user-select: none; /* Safari */        
+		-moz-user-select: none; /* Firefox */
+		-ms-user-select: none; /* IE10+/Edge */
+		user-select: none; /* Standard */
+	}
+	#help_box.visible {
+		display: initial;
+	}
+
+	img.tutorial_hint {
+		width: 10em;
+	}
+	div.tutorial_hint:not(:last-child) {
+		margin-bottom: 2em;
+	}
+
+	#language_switcher {
+		position: absolute;
+		width: 4em;
+		height: 3em;
+		right: 1em;
+		top: 1em;
+		padding: 0.5em;
+		cursor: pointer;
+		text-align: right;
+	}
+	#language_flag {
+		width: 2em;
+	}
+
+	@media screen and (min-width: 480px) {
 		body[overlay="0"] #searchbar {
 			position: absolute;
 			top: 1em;
 			left: 1em;
-			width: calc(100% - 5.25em);
-			max-width: 350px;
+			width: 200px;
 		}
-
-		body[overlay="0"] #container_searchbar {
-			text-align: left;
+		body[overlay="0"] #searchbar:hover {
+			width: 400px;
 		}
-
-		body[overlay="0"] #logo {
-			position: absolute;
-			top: 0.75em;
-			right: 0.75em;
-			width: 3.5em;
-			height: 3.5em;
+	}
+	@media screen and (max-width: 480px) {
+		#license {
+			font-size: 0.5em;
 		}
-
-		body[overlay="0"] .hide_on_overlay_off {
-			display: none;
-		}
-		body[overlay="1"] .hide_on_overlay_on {
-			display: none !important;
-		}
-
-		body[overlay="0"] {
-			height: 100%;
-			overflow: hidden;
-		}
-
-		/* Hide canvas on overlay show */
-		body[overlay="1"] canvas {
-			height: 0vh !important;
-		}
-
-		#container_about {
-			text-align: center;
-		}
-
-		#about {
-			display: inline-block;
-			margin-bottom: 0.5em;
-			color: white;
-		}
-
-		#help {
-			position: absolute;
-			left: 1em;
-			bottom: 1em;
-			width: 2em;
-			height: 2em;
-			background-color:rgba(211, 211, 211, 0.3);
-			text-align: center;
-			line-height: 2em;
-			font-weight: bold;
-			cursor: pointer;
-			z-index: 100;
-		}
-
-		#help_box {
-			display: none;
-			position: absolute;
-			left: 1em;
-			bottom: 4em;
-			z-index: 100;
-			background-color:rgba(211, 211, 211, 0.3);
-			padding: 2em;
-			-webkit-user-select: none; /* Safari */        
-			-moz-user-select: none; /* Firefox */
-			-ms-user-select: none; /* IE10+/Edge */
-			user-select: none; /* Standard */
-		}
-		#help_box.visible {
-			display: initial;
-		}
-
-		img.tutorial_hint {
-			width: 10em;
-		}
-		div.tutorial_hint:not(:last-child) {
-			margin-bottom: 2em;
-		}
-
-		#language_switcher {
-			position: absolute;
-			width: 4em;
-			height: 3em;
-			right: 1em;
-			top: 1em;
-			padding: 0.5em;
-			cursor: pointer;
-			text-align: right;
-		}
-		#language_flag {
-			width: 2em;
-		}
-
-		@media screen and (min-width: 480px) {
-			body[overlay="0"] #searchbar {
-				position: absolute;
-				top: 1em;
-				left: 1em;
-				width: 200px;
-			}
-			body[overlay="0"] #searchbar:hover {
-				width: 400px;
-			}
-		}
-		@media screen and (max-width: 480px) {
-			#license {
-				font-size: 0.5em;
-			}
-		}
-		@media screen and (max-width: 550px) {
+	}
+	@media screen and (max-width: 550px) {
 			/* #container_figures {
 				font-size: 8px;
-			} */
-			.figures_two_wrap_helper {
-				width: 100%;
+				} */
+				.figures_two_wrap_helper {
+					width: 100%;
+				}
+				.keyfigure, .keyfigure:last-child {
+					vertical-align: top;
+					height: 4em;
+					width: 8em;
+					margin: 1em;
+				}
+				#help_box {
+					width: calc(100% - 2em);
+				}
 			}
-			.keyfigure, .keyfigure:last-child {
-				vertical-align: top;
-				height: 4em;
-				width: 8em;
-				margin: 1em;
+			/* Screen size */
+			@media screen and (max-width: 300px) {
+				.keyfigure, .keyfigure:last-child {
+					width: 10em;
+				}
 			}
-			#help_box {
-				width: calc(100% - 2em);
-			}
-		}
-		/* Screen size */
-		@media screen and (max-width: 300px) {
-			.keyfigure, .keyfigure:last-child {
-				width: 10em;
-			}
-		}
 
-	</style>
+		</style>
 
-	<body overlay="1" onload="start()">
+		<body overlay="1" onload="start()">
 
 		<!-- <div id="tutorial_overlay">
 			<img class="tutorial_hint" id="tutorial_move_hint" src="Images/hint_to_move.png"></img>
@@ -396,9 +403,12 @@
 		</div> -->
 
 		<div id="help" class="hide_on_overlay_on">?</div>
+		<div id="clean" class="hide_on_overlay_on" onclick="free_ram()">
+			<i class="fas fa-broom"></i>
+		</div>
 		<div id="help_box" class="hide_on_overlay_on">
-			<img class="tutorial_hint" src="../images/hint_to_move.png"></img>
-			<div class="tutorial_hint">**shift_drag**</div>
+			<img class="tutorial_hint" src="../images/hint_to_rotate.png"></img>
+			<div class="tutorial_hint">**drag_to_move**</div>
 			<img class="tutorial_hint" src="../images/hint_to_rotate.png"></img>
 			<div class="tutorial_hint">**drag_to_rotate**</div>
 		</div>
@@ -408,16 +418,16 @@
 				<img id="language_flag" src="../images/**other_language**.png"></img>
 			</div>
 			<div id="container_logo">
-				<img id="logo" src="../images/Logo.png"></img>
+				<img id="logo" src="../images/Logo.png" onclick="back_to_main()"></img>
 			</div>
 			<div id="container_figures" class="hide_on_overlay_off">
-					<div class="figures_two_wrap_helper">
-						<!-- <div class="figures_helper"> -->
-							<div class="keyfigure">
-								<div class="number">39000</div>
-								<div class="unit">sq. km^2</div>
-								<div class="text">**covered**</div>
-							</div>
+				<div class="figures_two_wrap_helper">
+					<!-- <div class="figures_helper"> -->
+						<div class="keyfigure">
+							<div class="number">39000</div>
+							<div class="unit">sq. km^2</div>
+							<div class="text">**covered**</div>
+						</div>
 						<!-- </div> -->
 						<!-- <div class="figures_helper"> -->
 							<div class="keyfigure">
@@ -425,68 +435,68 @@
 								<div class="unit">**billion**</div>
 								<div class="text">**points**</div>
 							</div>
-						<!-- </div> -->
-					</div>
-					<div class="figures_two_wrap_helper">
-						<!-- <div class="figures_helper"> -->
-							<div class="keyfigure">
-								<div class="number">6000</div>
-								<div class="unit">GBs</div>
-								<div class="text">**of_lidar_data**</div>
+							<!-- </div> -->
+						</div>
+						<div class="figures_two_wrap_helper">
+							<!-- <div class="figures_helper"> -->
+								<div class="keyfigure">
+									<div class="number">6000</div>
+									<div class="unit">GBs</div>
+									<div class="text">**of_lidar_data**</div>
+								</div>
+								<!-- </div> -->
+								<!-- <div class="figures_helper"> -->
+									<div class="keyfigure">
+										<div class="number">2000</div>
+										<div class="unit">GBs</div>
+										<div class="text">**of_images**</div>
+									</div>
+									<!-- </div> -->
+								</div>
 							</div>
-						<!-- </div> -->
-						<!-- <div class="figures_helper"> -->
-							<div class="keyfigure">
-								<div class="number">2000</div>
-								<div class="unit">GBs</div>
-								<div class="text">**of_images**</div>
+							<div id="container_searchbar">
+								<div id="searchbar">
+									<div id="searchbar_icon"><i class="fas fa-search"></i></div>
+									<input id="searchbar_entry_field" onClick="this.setSelectionRange(0, this.value.length)" autofocus placeholder="**searchbar_tooltip**"></input>
+									<div id="searchbar_flag" show="false">**not_in_nrw**</div>
+								</div>
 							</div>
-						<!-- </div> -->
-					</div>
-				</div>
-			<div id="container_searchbar">
-				<div id="searchbar">
-					<div id="searchbar_icon"><i class="fas fa-search"></i></div>
-					<input id="searchbar_entry_field" onClick="this.setSelectionRange(0, this.value.length)" autofocus placeholder="**searchbar_tooltip**"></input>
-					<div id="searchbar_flag" show="false">**not_in_nrw**</div>
-				</div>
-			</div>
-			<div id="container_locations" class="hide_on_overlay_off">
-				<div id="subcontainer">
-					<div class="location_header">**places**:</div>
-					<div class="locations">
-							<div class="location_city" onclick="goToLatLng(51.1610129, 6.870557)">**bernrath**</div>
-							<div class="location_city" onclick="goToLatLng(51.4877427, 7.043917)">**zeche**</div>
-							<div class="location_city" onclick="goToLatLng(51.911693, 8.839107)">**monument**</div>
-							<div class="location_city" onclick="goToLatLng(50.877264, 7.122781)">**airport**</div>
-							<div class="location_city" onclick="goToLatLng(50.664391, 7.210468)">**dragoncastle**</div>
-							<div class="location_city" onclick="goToLatLng(51.731987, 7.534085)">**palace_northchurch**</div>
-							<div class="location_city" onclick="goToLatLng(51.667212, 6.451361)">**arch_park**</div>
-							<div class="location_city" onclick="goToLatLng(51.299887, 7.674523)">**castle_altena**</div>
-							<div class="location_city" onclick="goToLatLng(52.014438, 8.526991)">**castle_sparrenburg**</div>
-							<div class="location_city" onclick="goToLatLng(51.142016, 6.557364)">**palace_dyck**</div>		</div>
-					<div class="location_header">**cities**:</div>
-					<div class="locations">
-						<div class="location_city" onclick="goToLatLng(50.9375310, 6.96027860)">**cologne**</div>
-						<div class="location_city" onclick="goToLatLng(51.2277411, 6.77345560)">**dusseldorf**</div>
-						<div class="location_city" onclick="goToLatLng(51.5135872, 7.46529810)">**dortmund**</div>
-						<div class="location_city" onclick="goToLatLng(51.4556432, 7.01155519)">**essen**</div>
-						<div class="location_city" onclick="goToLatLng(51.4344078, 6.76232930)">**duisburg**</div>
-						<div class="location_city" onclick="goToLatLng(51.4818445, 7.21623629)">**bochum**</div>
-					</div>
-				</div>
-			</div>
-			<div class="placeholder x3"></div>
-			<div id="container_about" class="hide_on_overlay_off">
-				<div id="about">Made with ♥︎ by Tristan Menzinger</div>
-				<br>
-				<a id="github_ref" class="github-button" href="https://github.com/TristanMenzinger/NRWOpenLidarViewer/blob/master/README.md" data-icon="octicon-star" data-size="large" aria-label="NRWOpenLidarViewer on GitHub">NRWOpenLidarViewer on GitHub</a>
-				<div class="placeholder"></div>
-		</div>
-		<div id="license" class="hide_on_overlay_on">**provider**: <a href="https://open.nrw">Land NRW (2019)</a>
-			// **data**: <a href="https://www.opengeodata.nrw.de/produkte/geobasis/dom/dom1l/index.html">Opengeodata.NRW</a> 
-			// **license**: <a href="http://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a></div>
-		<canvas id="threejscanvas"></canvas>
-	</body>
+							<div id="container_locations" class="hide_on_overlay_off">
+								<div id="subcontainer">
+									<div class="location_header">**places**:</div>
+									<div class="locations">
+										<div class="location_city" onclick="goToLatLng(51.1610129, 6.870557)">**bernrath**</div>
+										<div class="location_city" onclick="goToLatLng(51.4877427, 7.043917)">**zeche**</div>
+										<div class="location_city" onclick="goToLatLng(51.911693, 8.839107)">**monument**</div>
+										<div class="location_city" onclick="goToLatLng(50.877264, 7.122781)">**airport**</div>
+										<div class="location_city" onclick="goToLatLng(50.664391, 7.210468)">**dragoncastle**</div>
+										<div class="location_city" onclick="goToLatLng(51.731987, 7.534085)">**palace_northchurch**</div>
+										<div class="location_city" onclick="goToLatLng(51.667212, 6.451361)">**arch_park**</div>
+										<div class="location_city" onclick="goToLatLng(51.299887, 7.674523)">**castle_altena**</div>
+										<div class="location_city" onclick="goToLatLng(52.014438, 8.526991)">**castle_sparrenburg**</div>
+										<div class="location_city" onclick="goToLatLng(51.142016, 6.557364)">**palace_dyck**</div>		</div>
+										<div class="location_header">**cities**:</div>
+										<div class="locations">
+											<div class="location_city" onclick="goToLatLng(50.9375310, 6.96027860)">**cologne**</div>
+											<div class="location_city" onclick="goToLatLng(51.2277411, 6.77345560)">**dusseldorf**</div>
+											<div class="location_city" onclick="goToLatLng(51.5135872, 7.46529810)">**dortmund**</div>
+											<div class="location_city" onclick="goToLatLng(51.4556432, 7.01155519)">**essen**</div>
+											<div class="location_city" onclick="goToLatLng(51.4344078, 6.76232930)">**duisburg**</div>
+											<div class="location_city" onclick="goToLatLng(51.4818445, 7.21623629)">**bochum**</div>
+										</div>
+									</div>
+								</div>
+								<div class="placeholder x3"></div>
+								<div id="container_about" class="hide_on_overlay_off">
+									<div id="about">Made with ♥︎ by Tristan Menzinger</div>
+									<br>
+									<a id="github_ref" class="github-button" href="https://github.com/TristanMenzinger/NRWOpenLidarViewer/blob/master/README.md" data-icon="octicon-star" data-size="large" aria-label="NRWOpenLidarViewer on GitHub">NRWOpenLidarViewer on GitHub</a>
+									<div class="placeholder"></div>
+								</div>
+								<div id="license" class="hide_on_overlay_on">**provider**: <a href="https://open.nrw">Land NRW (2019)</a>
+									// **data**: <a href="https://www.opengeodata.nrw.de/produkte/geobasis/dom/dom1l/index.html">Opengeodata.NRW</a> 
+									// **license**: <a href="http://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a></div>
+									<canvas id="threejscanvas"></canvas>
+								</body>
 
-</html>
+								</html>

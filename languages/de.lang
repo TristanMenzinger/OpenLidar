@@ -17,7 +17,7 @@ data=Daten
 license=Lizenz
 
 //Tutorial Hint
-shift_drag=Shift und ziehen zum Bewegen
+drag_to_move=Rechts clicken und ziehen zum Bewegen
 drag_to_rotate=Ziehen zum Rotieren
 
 //Content

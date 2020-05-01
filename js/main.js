@@ -16,7 +16,6 @@ let first_search_done = false;
 // let already_loaded = [];
 
 let all_tiles = [];
-
 let all_hint_tiles = [];
 
 let GEOMETRY_LOADING_HINT;
@@ -27,6 +26,18 @@ let CONCURRENT_HTTP_REQUEST_COUNT = 0;
 let LOAD_AROUND_NR = 2;
 
 let clicked_entry_field = false;
+
+let free_ram = () => {
+	const sorted_all_tiles = all_tiles.sort((a, b) => b.creation_date - a.creation_date)
+	sorted_all_tiles.slice(30, sorted_all_tiles.length).map(tile => tile.remove());
+	all_tiles = sorted_all_tiles.slice(0, 30);
+}
+
+let back_to_main = () => {
+	addOverlay();
+	first_search_done = false;
+	global_offset_z = 0;
+}
 
 //Prevents scrolling the page 
 let preventBehavior = (e) => {
@@ -70,7 +81,7 @@ function initAutocomplete() {
 	let autocomplete = new google.maps.places.Autocomplete(input);
 	autocomplete.setFields(['address_components', 'geometry','name']);
 	//autocomplete.setTypes(['geocode', 'regions'])
-	console.log(autocomplete)
+	// console.log(autocomplete)
 
 	let infowindow = new google.maps.InfoWindow();
 	let infowindowContent = document.getElementById('infowindow-content');
@@ -257,20 +268,20 @@ let start = async () => {
 	canvas = document.querySelector("canvas");
 	renderer = new THREE.WebGLRenderer({canvas: canvas});
 	renderer.setSize(window.innerWidth, window.innerHeight);
-	//renderer.setClearColor(0xffffff);
+	// renderer.setClearColor(0xffffff);
 	// renderer.setClearColor(0x000000);
 	renderer.setClearColor(0x696969);
 
 	//document.getElementById("threejs_container").appendChild(renderer.domElement);
 
 	// = new THREE.Orbit( camera );
-	console.log(renderer.domElement)
-	//controls = new THREE.OrbitControls( camera, renderer.domElement );
+	// console.log(renderer.domElement)
+	// controls = new THREE.OrbitControls( camera, renderer.domElement );
 	controls = new THREE.OrbitControls( camera );
 
 	controls.screenSpacePanning = true;
 
-	console.log(controls)
+	// console.log(controls)
 	
 	//.update() must be called after any manual changes to the camera's transform
 
@@ -293,7 +304,7 @@ let start = async () => {
 
 	let axesHelper = new THREE.AxesHelper(5);
 	scene.add(axesHelper);
-	console.log(axesHelper)
+	// console.log(axesHelper)
 
 	camera.position.z = 5;
 
@@ -547,6 +558,9 @@ class HintObject {
 
 class TileObject {
 	constructor(x50, y50) {
+
+		this.creation_date = new Date()
+
 		this.x50 = x50;
 		this.y50 = y50;
 
@@ -554,6 +568,8 @@ class TileObject {
 		this.download_started = false;
 		this.download_finished = false;
 		this.showing_loading_hint = false;
+
+		this.empty = false;
 
 		draw_hint_tiles_from_x_y(x50, y50);
 		
@@ -624,9 +640,10 @@ class TileObject {
 	}
 
 	show() {
-		if(!this.isShowing()) {
+		if(!this.isShowing() && !this.empty) {
 			this.showing = true;
-			if(this.threejs_points === undefined || this.threejs_points === null) {
+			if(this.threejs_points == null) {
+			// if(this.threejs_points === undefined || this.threejs_points === null) {
 				this.threejs_points = createTilePoints(this);
 				this.removeRawData();
 			}
@@ -648,8 +665,10 @@ class TileObject {
 			try {
 				await this.downloadData();
 
-				if(this.xyz != null && this.colors !== null) {
+				if(this.xyz != null && this.colors != null) {
 					this.show();
+				}else {
+					this.empty = true;
 				}
 
 			}catch {
@@ -807,6 +826,10 @@ let createTilePoints = (tileObject) => {
 /* GUI MODIFICATIONS */
 function removeOverlay() {
 	document.body.setAttribute("overlay","0");
+}
+
+function addOverlay() {
+	document.body.setAttribute("overlay","1");
 }
 
 //Convert a "5a7aff" HEX to a (255,255,255) RGB Value
