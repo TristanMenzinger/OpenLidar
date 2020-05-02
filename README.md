@@ -1,11 +1,19 @@
-# NRWOpenLidarViewer
-An interactive web visualisation of open source NRW LiDAR data. Part of my bachelors thesis, I thought this'd be fun for everyone to see. All data is provided under the [dl-de/by-2.0](https://www.govdata.de/dl-de/by-2-0) license by [Land NRW (2019)](https://open.nrw) and can be found on the [Opengeodata.NRW](https://www.opengeodata.nrw.de/produkte/) Platform.
+<p align="center">
+  <img src="readme/Title.png" align="center" width="200">
+</p>
+
+This is an interactive web visualisation of open source NRW LIDAR data. I stumbled upon this data during my bachelors thesis and thought this'd be fun for everyone to see. This website was a lot more work than anticipated (what isn't?) and I haven't optimized it much beyond compressing the raw data. I hope you like it!
 
 ## What's there to see?
-Visit https://nrw.menzinger.io and type in your address to have a look at the colored LiDAR data. Or take a 3D visit to Cologne, Dortmund, Düsseldorf or Essen.  
+Visit https://nrw.menzinger.io and type in your address to have a look at the colored LIDAR data. Or take a 3D visit to Cologne, Dortmund, Düsseldorf or Essen. Or whatever you place in NRW you like, really. 
 
-## Website
-Visualized using threejs. The data is hosted on Backblaze B2 in Amsterdam - all other options would probably bankrupt me pretty soon ;)
+<img src="readme/Example_Image.jpg" align="center" width="100%">
 
-## Backend
-The backend is pretty lean, in in /Backend you can see the little script I wrote to convert single .xyz LiDAR files to more web-worthy 50x50m Chunks of .gziped files containing the xyz-points and the colors. The color is applied by mapping the x and y coordinates to the orthophoto image pixels. 
+## About
+I processed about 6TB's of LIDAR data (uncompressed) and ~2TB's of orthographic images, split them into 50x50m tiles and mapped a color to each point. It took a while.
+The Website itself is relatively lean. The compressed xyz & color data is hosted on Backblaze B2 Cloud in Amsterdam (all other options would probably bankrupt me pretty soon). Depending on coordinates, I fetch the corresponding tiles an visualize the points using threejs. 
+
+If you have suggestions and/or like it feel free to contact me or leave a star!
+
+## Data
+All data is provided under the [dl-de/by-2.0](https://www.govdata.de/dl-de/by-2-0) license by [Land NRW (2020)](https://open.nrw) and can be found on the [Opengeodata.NRW](https://www.opengeodata.nrw.de/produkte/) Platform.
