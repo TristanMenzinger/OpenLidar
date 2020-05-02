@@ -2,7 +2,7 @@
   <img src="readme/Title.png" align="center" width="250">
 </p>
 
-This is an interactive web visualisation of open source NRW LIDAR data. I stumbled upon this data during my bachelors thesis and thought this'd be fun for everyone to see. This website was a lot more work than anticipated (what isn't?) and I haven't optimized it much beyond compressing the raw data. I hope you like it!
+This is an interactive web visualisation of the German state of North Rhine-Westphalia's (NRW) open source LIDAR data. I stumbled upon this data during my bachelors thesis and thought this'd be fun for everyone to see. This website was a lot more work than anticipated (what isn't?) and I haven't optimized it much beyond compressing the raw data. I hope you like it!
 
 If you have suggestions and/or like it feel free to contact me or leave a star :).
 
