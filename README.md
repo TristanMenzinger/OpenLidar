@@ -13,13 +13,13 @@ Visit https://nrw.menzinger.io and type in your address to have a look at the co
 I processed ~6TB's of LIDAR data and ~2TB's of orthographic images, split them into 50x50m tiles and mapped a color to each point. It took a while.
 The Website itself is relatively lean. The compressed xyz & color data is hosted on Backblaze B2 Cloud in Amsterdam (all other options would probably bankrupt me pretty soon). Depending on coordinates, I fetch the corresponding tiles an visualize the points using threejs. 
 
-# Disclaimer / Info
+## Disclaimer / Info
 Keep in mind the data is not perfect:
 - The images aren't always from the date the LIDAR data is from, causing some structures to be photographed but not 3D-Scanned and vice versa. 
 - Both the LIDAR data and the orthograpic images are collected from vertically above surface, which is why facades are missing
 - A couple of square kilometers of data are missing (your odds are ~0,03% of finding one, consider yourself lucky!). I will fix this in the future.
 
-# Examples
+## Examples
 <img src="readme/Example_Image1.jpg" width="100%">
 <img src="readme/Example_Image2.jpg" width="100%">
 <img src="readme/Example_Image3.jpg" width="100%">
