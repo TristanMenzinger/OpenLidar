@@ -1,0 +1,47 @@
+LANGUAGE=DE
+
+//Elements
+places=Places
+cities=Cities
+searchbar_tooltip=Search
+
+other_language=de
+other_language_url=../de/index.html
+
+//Flag
+not_in_nrw=Not in NRW
+
+//License
+provider=Provider
+data=Data
+license=License
+
+//Tutorial Hint
+drag_to_move=Right Click and Drag to move around
+drag_to_rotate=Drag to rotate around
+
+//Content
+bernrath=Palace Bernrath
+zeche=Zeche Zollverein
+airport=Cologne Airport
+monument=Monument to Hermman
+dragoncastle=Castle Drachenfels
+palace_northchurch=Palace Nordkirchen
+arch_park=Archäologischer Park Xanten
+castle_altena=Castle Altena
+castle_sparrenburg=Castle Sparrenburg
+palace_dyck=Palace Dyck
+
+cologne=Cologne
+dusseldorf=Düsseldorf
+dortmund=Dortmund
+essen=Essen
+duisburg=Duisburg
+bochum=Bochum
+
+covered=covered
+points=Points
+of_lidar_data=of LIDAR Data
+of_images=of images
+billion=Billion
+
