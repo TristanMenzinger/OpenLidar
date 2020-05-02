@@ -10,7 +10,7 @@ If you have suggestions and/or like it feel free to contact me or leave a star :
 Visit https://nrw.menzinger.io and type in your address to have a look at the colored LIDAR data. Or take a 3D visit to Cologne, Dortmund, Düsseldorf or Essen. Or whatever you place in NRW you like, really. See below for examples.
 
 ## About
-I processed about 6TB's of LIDAR data (uncompressed) and ~2TB's of orthographic images, split them into 50x50m tiles and mapped a color to each point. It took a while.
+I processed ~6TB's of LIDAR data and ~2TB's of orthographic images, split them into 50x50m tiles and mapped a color to each point. It took a while.
 The Website itself is relatively lean. The compressed xyz & color data is hosted on Backblaze B2 Cloud in Amsterdam (all other options would probably bankrupt me pretty soon). Depending on coordinates, I fetch the corresponding tiles an visualize the points using threejs. 
 
 # Disclaimer / Info
