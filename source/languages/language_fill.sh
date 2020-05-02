@@ -49,12 +49,13 @@ while read -r line; do
 	if [[ "$linet" =~ ^//.* ]]; then
     	continue
 	fi
-
-	# Key-Value split
-	values=(${linet//=/ })
+	
+	# Careful... 
+	IFS='='
+	read -ra values <<< "$linet"
 	key="${values[0]}"
 	value="${values[1]}"
-	# echo "$key - $value"
+	IFS=' '
 
 	# On linux, this line will fail als sed doesn't need the ''
 	sed -i '' "s|{{$key}}|$value|g" "$htmlo"
