@@ -239,7 +239,7 @@ let focus_to_touch_controls = () => {
 	searchbar_entry_field.blur();
 }
 
-let focus_to_searchbar = () => {
+let 	focus_to_searchbar = () => {
 	searchbar_entry_field = document.getElementById("searchbar_entry_field");
 	controls.enabled = false;
 	searchbar_entry_field.focus();
