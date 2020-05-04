@@ -1,3 +1,6 @@
+rm css/*
+rm js/*
+
 mkdir -p js
 mkdir -p css
 
