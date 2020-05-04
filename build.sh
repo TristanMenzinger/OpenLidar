@@ -10,6 +10,7 @@ uglifyjs source/js/pako.js > js/pako.js
 uglifyjs source/js/proj4.js > js/proj4.js
 uglifyjs source/js/three.js > js/three.js
 uglifyjs source/js/WebGL.js > js/WebGL.js
+cp source/js/main.js js/main.js
 
 echo "Creating language files"
 ./source/languages/language_fill.sh source/html/index.html de/index.html source/languages/de.lang
