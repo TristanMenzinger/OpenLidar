@@ -6,7 +6,7 @@ This is an interactive web visualisation of the German state of North Rhine-West
 If you have suggestions and/or like it feel free to contact me or leave a star.
 
 ## What's there to see?
-Visit https://nrw.menzinger.io and type in your address to have a look at the colored LIDAR data. Or take a 3D visit to Cologne, Dortmund, Düsseldorf or Essen. Or whatever you place in NRW you like, really. See below for examples.
+Visit https://openlidar.io and type in your address to have a look at the colored LIDAR data. Or take a 3D visit to Cologne, Dortmund, Düsseldorf or Essen. Or whatever you place in NRW you like, really. See below for examples.
 
 ## Examples
 <img src="readme/Example_Image1.jpg" width="100%">
