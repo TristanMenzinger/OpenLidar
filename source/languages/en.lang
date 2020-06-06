@@ -1,5 +1,7 @@
 LANGUAGE=EN
 
+meta_description=An interactive web visualisation of the German state of North Rhine-Westphalia's (NRW) Open Source LIDAR data
+
 //Elements
 places=Places
 cities=Cities
