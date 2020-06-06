@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="readme/Title.png" align="center" width="250">
+  <img src="https://github.com/TristanMenzinger/OpenLidar/blob/misc/Logo_black_on_white.png?raw=true" align="center" height="190px">
 </p>
 
 This is an interactive web visualisation of the German state of North Rhine-Westphalia's (NRW) open source LIDAR data. I stumbled upon this data during my bachelors thesis and thought this'd be fun for everyone to see. This website was a lot more work than anticipated (what isn't?) and I haven't optimized it much beyond compressing the raw data. I hope you like it!
