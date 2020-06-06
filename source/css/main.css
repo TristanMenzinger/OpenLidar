@@ -334,13 +334,21 @@ div.tutorial_hint:not(:last-child) {
 
 #language_switcher {
 	position: absolute;
-	width: 4em;
+	width: 12em;
 	height: 3em;
 	right: 1em;
 	top: 1em;
 	padding: 0.5em;
 	cursor: pointer;
 	text-align: right;
+}
+
+#language_switcher > div {
+	display: inline-block;
+	width: 2em;
+	text-align: center;
+	margin-left: 5px;
+	font-size: 10pt;
 }
 
 #language_flag {

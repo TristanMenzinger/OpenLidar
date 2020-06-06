@@ -27,6 +27,11 @@ let LOAD_AROUND_NR = 2;
 
 let clicked_entry_field = false;
 
+let set_language_pref = (language) => {
+	localStorage.setItem('language_preference', language);
+	location.href='../'+language+'/index.html'
+}
+
 let free_ram = () => {
 	const sorted_all_tiles = all_tiles.sort((a, b) => b.creation_date - a.creation_date)
 	sorted_all_tiles.slice(30, sorted_all_tiles.length).map(tile => tile.remove());
@@ -730,7 +735,8 @@ let getTileData = async (x50, y50) => {
 //Input   x, y
 //Output  Array of Points
 let loadPoints = async (x, y) => {
-	let request_url = "https://openlidar.menzinger.io/data/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	// let request_url = "https://openlidar.menzinger.io/data/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	let request_url = "https://openlidar.menzinger.workers.dev/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	try {
 		let xyz = await makeRequest("GET", request_url);
 		xyz = CSVToArray(xyz, ",")
@@ -745,7 +751,8 @@ let loadPoints = async (x, y) => {
 //Input   x, y
 //Output  Array of HEX Color Strings
 let loadColor = async (x, y) => {
-	let request_url = "https://openlidar.menzinger.io/data/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	// let request_url = "https://openlidar.menzinger.io/data/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	let request_url = "https://openlidar.menzinger.workers.dev/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	try {
 		let colors = await makeRequest("GET", request_url);
 		colors = CSVToArray(colors, " ")
@@ -838,21 +845,46 @@ let hexToRgb = (hex) => {
 	return [r, g, b];
 }
 
+// FOR REQUESTS WITHOUT THE PROPER HEADERS!
 //Make an URL Request
 //Input   Request Type (GET, POST, ...)
 //Return  Promise with resolve value of pako-inflated (ungzipped) string of values
+// let makeRequest = (method, url) => {
+// 	return new Promise((resolve, reject) => {
+// 		let xhr = new XMLHttpRequest();
+// 		xhr.open(method, url);
+// 		xhr.responseType = "arraybuffer"; //for ungzip with pako
+// 		xhr.onload = function() {
+// 			//console.log(xhr)
+// 			if (this.status >= 200 && this.status < 300) {
+// 				let arrayBuffer = xhr.response; // Note: not oReq.responseText
+// 				let byteArray = new Uint8Array(arrayBuffer);
+// 				let result = pako.inflate(byteArray, { to: 'string' });
+// 				resolve(result);
+// 			} else {
+// 				reject({
+// 					status: this.status,
+// 					statusText: xhr.statusText
+// 				});
+// 			}
+// 		};
+// 		xhr.onerror = function() {
+// 			reject({
+// 				status: this.status,
+// 				statusText: xhr.statusText
+// 			});
+// 		};
+// 		xhr.send();
+// 	});
+// }
+
 let makeRequest = (method, url) => {
 	return new Promise((resolve, reject) => {
 		let xhr = new XMLHttpRequest();
 		xhr.open(method, url);
-		xhr.responseType = "arraybuffer"; //for ungzip with pako
 		xhr.onload = function() {
-			//console.log(xhr)
 			if (this.status >= 200 && this.status < 300) {
-				let arrayBuffer = xhr.response; // Note: not oReq.responseText
-				let byteArray = new Uint8Array(arrayBuffer);
-				let result = pako.inflate(byteArray, { to: 'string' });
-				resolve(result);
+				resolve(xhr.response);
 			} else {
 				reject({
 					status: this.status,

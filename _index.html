@@ -1,0 +1,13 @@
+<html>
+	<script type="text/javascript">
+		
+		let language_preference = localStorage.getItem('language_preference');
+		if(language_preference == "en") {
+			location.href="../en/index.html"
+		}else {
+			location.href="../de/index.html"
+			localStorage.setItem("language_preference", "de");
+		}
+
+	</script>
+</html>
