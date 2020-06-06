@@ -29,7 +29,7 @@ let clicked_entry_field = false;
 
 let set_language_pref = (language) => {
 	localStorage.setItem('language_preference', language);
-	location.href='../'+language+'/index.html'
+	location.href='../'+language+'/'
 }
 
 let free_ram = () => {
