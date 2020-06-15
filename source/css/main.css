@@ -37,6 +37,7 @@ canvas {
 }
 
 .logo {
+	margin-left: 15px;
 	width: 200px;
 	z-index: 2;
 	cursor: pointer;
