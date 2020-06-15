@@ -187,6 +187,8 @@ let zoomToNewPlace = (x, y) => {
 
 function initTransferControlsListener() {
 
+	console.log("TEST")
+
 	document.addEventListener("touchmove", preventBehavior, {passive: false});
 
 	// Important
