@@ -247,8 +247,8 @@ body[overlay="0"] .logo {
 	position: absolute;
 	top: 0.75em;
 	right: 0.75em;
-	width: 3.5em;
-	height: 3.5em;
+	width: 3.3em;
+	height: 3.3em;
 }
 body[overlay="0"] .logo.simple {
 	display: initial;

@@ -40,6 +40,8 @@ let free_ram = () => {
 
 let back_to_main = () => {
 	addOverlay();
+	removeTransferControlsListener();
+	focus_to_searchbar();
 	first_search_done = false;
 	global_offset_z = 0;
 }
@@ -185,59 +187,62 @@ let zoomToNewPlace = (x, y) => {
 	moveCamera(x, y)
 }
 
+
+function document_click(event) {
+	let targetElement = event.target || event.srcElement;
+	let is_clicked_entry_field = targetElement === document.getElementById("searchbar_entry_field");
+	if (clicked_entry_field && !is_clicked_entry_field) {
+		focus_to_touch_controls();
+	}
+	clicked_entry_field = is_clicked_entry_field;
+}
+
+function searchbar_enter(event) {
+	let key = event.which || event.keyCode;
+	if (key === 13) { // 13 is enter
+		focus_to_touch_controls();
+	}
+}
+
+function searchbar_mouseover(event) {
+
+	controls.enabled = false;
+}
+
+function canvas_click(event) {
+	controls.enabled = true;
+	searchbar_entry_field.blur();
+}
+
+function canvas_mouseover(event) {
+	controls.enabled = true;
+	searchbar_entry_field.blur();
+}
+
 function initTransferControlsListener() {
 
-	console.log("TEST")
-
-	document.addEventListener("touchmove", preventBehavior, {passive: false});
+	document.addEventListener("touchmove", preventBehavior, { passive: false });
 
 	// Important
 	// Switches focus to the 3D Canvas when neccessary 
-	document.addEventListener("click", function(event){
-		let targetElement = event.target || event.srcElement;
-		let is_clicked_entry_field = targetElement === document.getElementById("searchbar_entry_field");
-		if(clicked_entry_field && !is_clicked_entry_field) {
-			focus_to_touch_controls();
-		}
-		clicked_entry_field = is_clicked_entry_field;
-	});
+	document.addEventListener("click", document_click);
 
-	searchbar_entry_field = document.getElementById("searchbar_entry_field");
-	searchbar_entry_field.addEventListener('keypress', (e) => {
-		let key = e.which || e.keyCode;
-		if (key === 13) { // 13 is enter
-			focus_to_touch_controls();
-		}
-	});
+	document.getElementById("searchbar_entry_field").addEventListener("keypress", searchbar_enter);
+	document.getElementById("searchbar_entry_field").addEventListener("mouseover", searchbar_mouseover);
 
-	searchbar_entry_field = document.getElementById("searchbar_entry_field");
-	searchbar_entry_field.addEventListener("mouseover", function() {
-		controls.enabled = false;
-	});
+	document.querySelector("canvas").addEventListener("click", canvas_click)
+	document.querySelector("canvas").addEventListener("mouseover", canvas_mouseover);
+}
 
-	document.querySelector("canvas").addEventListener("click", function() {
-		controls.enabled = true;
-		searchbar_entry_field.blur();
-	})
+function removeTransferControlsListener() {
+	document.removeEventListener("touchmove", preventBehavior);
+	document.removeEventListener("click", document_click);
 
-	document.querySelector("canvas").addEventListener("mouseover", function() {
-		controls.enabled = true;
-		searchbar_entry_field.blur();
-	});
+	document.getElementById("searchbar_entry_field").removeEventListener("keypress", searchbar_enter);
+	document.getElementById("searchbar_entry_field").removeEventListener("mouseover", searchbar_mouseover);
 
-	// searchbar_entry_field.addEventListener('keypress', (e) => {
-	// 	let key = e.which || e.keyCode;
-	// 	if (key === 13) { // 13 is enter
-	// 		controls.enabled = true;
-	// 		searchbar_entry_field.blur();
-	// 	}
-	// });
-	/*
-	searchbar_entry_field.addEventListener("mouseout", function() {
-		console.log("hovering out");
-		controls.enabled = true;
-	});
-	*/
+	document.querySelector("canvas").removeEventListener("click", canvas_click)
+	document.querySelector("canvas").removeEventListener("mouseover", canvas_mouseover);
 }
 
 let focus_to_touch_controls = () => {
