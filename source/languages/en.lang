@@ -1,6 +1,4 @@
-LANGUAGE=EN
-
-meta_description=An interactive web visualisation of the German state of North Rhine-Westphalia's (NRW) Open Source LIDAR data
+LANGUAGE=DE
 
 //Elements
 places=Places
@@ -24,18 +22,18 @@ drag_to_rotate=Drag to rotate around
 
 //Content
 bernrath=Palace Bernrath
-zeche=Zeche Zollverein
+zeche=Zeche Zollverein Mining Site
 airport=Cologne Airport
 monument=Monument to Hermman
 dragoncastle=Castle Drachenfels
 palace_northchurch=Palace Nordkirchen
-arch_park=Archäologischer Park Xanten
+arch_park=Xanten Archaeological Park
 castle_altena=Castle Altena
 castle_sparrenburg=Castle Sparrenburg
 palace_dyck=Palace Dyck
 
 cologne=Cologne
-dusseldorf=Düsseldorf
+dusseldorf=Duesseldorf
 dortmund=Dortmund
 essen=Essen
 duisburg=Duisburg
@@ -46,8 +44,3 @@ points=Points
 of_lidar_data=of LIDAR Data
 of_images=of images
 billion=Billion
-
-contact=Get in touch
-
-writeto=Write to
-thanks=Thank you!
