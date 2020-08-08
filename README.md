@@ -15,7 +15,7 @@ Visit https://openlidar.io and type in your address to have a look at the colore
 
 ## About
 I processed ~6TB's of Lidar data and ~2TB's of orthographic images, split them into 50x50m tiles and mapped a color to each point. It took a while.
-The Website itself is relatively lean. The compressed xyz & color data is hosted on Backblaze B2 Cloud in Amsterdam (all other options would probably bankrupt me pretty soon). Depending on coordinates, I fetch the corresponding tiles an visualize the points using threejs. 
+The Website itself is relatively lean. The compressed xyz & color data is hosted on Backblaze B2 Cloud in Amsterdam (all other options would probably bankrupt me pretty soon). Depending on the coordinates, I fetch the corresponding tiles and visualize the points using threejs. 
 
 ## Disclaimer / Info
 Keep in mind the data is not perfect:
