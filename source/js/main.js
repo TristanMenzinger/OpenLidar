@@ -743,7 +743,7 @@ let getTileData = async (x50, y50) => {
 //Input   x, y
 //Output  Array of Points
 let loadPoints = async (x, y) => {
-	let request_url = "https://public.openlidar.io/data/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	let request_url = "https://openlidar.menzinger.io/data/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	try {
 		let xyz = await makeRequest("GET", request_url);
 		xyz = CSVToArray(xyz, ",");
@@ -758,7 +758,7 @@ let loadPoints = async (x, y) => {
 //Input   x, y
 //Output  Array of HEX Color Strings
 let loadColor = async (x, y) => {
-	let request_url = "https://public.openlidar.io/data/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
+	let request_url = "https://openlidar.menzinger.io/data/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	try {
 		let colors = await makeRequest("GET", request_url);
 		colors = CSVToArray(colors, " ");
