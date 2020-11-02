@@ -746,10 +746,10 @@ let loadPoints = async (x, y) => {
 	let request_url = "https://public.openlidar.io/data/lidar/G0/xyz_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/xyz_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	try {
 		let xyz = await makeRequest("GET", request_url);
-		xyz = CSVToArray(xyz, ",")
+		xyz = CSVToArray(xyz, ",");
 		return xyz;
 	}catch {
-		console.log("Fetch returned 404, probably water.")
+		console.log("Fetch returned 404, probably water.");
 		return null;		
 	}
 }
@@ -761,10 +761,10 @@ let loadColor = async (x, y) => {
 	let request_url = "https://public.openlidar.io/data/color/G0/col_32N_"+parseInt(roundDown1000(x)).toString()+"_"+parseInt(roundDown1000(y)).toString()+"/col_"+parseInt(x).toString()+"_"+parseInt(y).toString()+".gz"
 	try {
 		let colors = await makeRequest("GET", request_url);
-		colors = CSVToArray(colors, " ")
+		colors = CSVToArray(colors, " ");
 		return colors;
 	}catch {
-		console.log("Fetch returned 404, probably water.")
+		console.log("Fetch returned 404, probably water.");
 		return null;		
 	}
 }
