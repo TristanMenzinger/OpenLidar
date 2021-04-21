@@ -19,8 +19,8 @@ The Website itself is relatively lean. The compressed xyz & color data is hosted
 
 ## Disclaimer / Info
 Keep in mind the data is not perfect:
-- The images aren't always from the date the LIDAR data is from, causing some structures to be photographed but not 3D-Scanned and vice versa. 
-- Both the Lidar data and the orthograpic images are collected from vertically above surface, which is why facades are missing
+- The images are not always from the date the LIDAR data is from, causing some structures to be photographed but not 3D-Scanned and vice versa. 
+- Both the Lidar data and the orthograpic images are collected from vertically above surface, which is why facades are missing.
 - A couple of square kilometers of data are missing (your odds are ~0,03% of finding one, consider yourself lucky!). I will fix this in the future.
 
 ## Data
